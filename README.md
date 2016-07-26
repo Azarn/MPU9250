@@ -1,29 +1,11 @@
 MPU9250
 ======================
 
-C++ MPU9250 Driver for Arduino
+C++ sample code for MPU9250 on linux using i2c bus, merged from [MPU6050 Code](https://github.com/richardghirst/PiBits/tree/master/MPU6050-Pi-Demo) and [MPU9250 for arduino](https://github.com/Snowda/MPU9250)
 
-![MPU-9250 datasheet (PDF)](www.invensense.com/mems/gyro/documents/PS-MPU-9250A-01.pdf)
+[MPU-9250 datasheet (PDF)](https://store.invensense.com/datasheets/invensense/MPU9250REV1.0.pdf)
 
-![MPU-9250 registry map (PDF)](store.invensense.com/Datasheets/invensense/RM-MPU-9250A-00.pdf)
-
-======================
-Installation
-======================
-
-Requires the Arduino Libraries
-![Wire.h](http://arduino.cc/en/reference/wire) 
-and 
-![SPI.h](http://arduino.cc/en/Reference/SPI) 
-depending on how you wish to interface with the chip.
-
-*warning* SPI not supported yet!
-
-Download the repo as a zip file and install throught the Arduino IDE and select:
-
-Sketch -> Import Library -> Add Library
-
-Make sure that if you are installing updates that you remove any pre-existing libraries called "MPU9250".
+[MPU-9250 registry map (PDF)](http://store.invensense.com/Datasheets/invensense/RM-MPU-9250A-00.pdf)
 
 ======================
 Capibilities
