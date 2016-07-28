@@ -5,130 +5,78 @@
 * Changelog:
 *     ... - ongoing development release
 
-* NOTE: THIS IS ONLY A PARIAL RELEASE. 
-* THIS DEVICE CLASS IS CURRENTLY UNDERGOING ACTIVE DEVELOPMENT AND IS MISSING MOST FEATURES. 
+* NOTE: THIS IS ONLY A PARIAL RELEASE.
+* THIS DEVICE CLASS IS CURRENTLY UNDERGOING ACTIVE DEVELOPMENT AND IS MISSING MOST FEATURES.
 * PLEASE KEEP THIS IN MIND IF YOU DECIDE TO USE THIS PARTICULAR CODE FOR ANYTHING.
 */
 
-#include "stdint.h"
+
 #include "MPU9250.h"
-#include "Wire.h"
 
-/** Default constructor, uses default I2C address.
- * @see MPU9250_DEFAULT_ADDRESS
- */
-MPU9250::MPU9250() {
-    _address = MPU9250_DEFAULT_ADDRESS;
-    _mag_address = MPU9250_MAG_ADDRESS;
+
+MPU9250::MPU9250() : MPU9250(MPU9250_DEFAULT_ADDRESS, MPU9250_MAG_ADDRESS) {
 }
 
-bool MPU9250::writeRegister(const uint8_t register_addr, const uint8_t value) {
-    //send write call to sensor address
-    //send register address to sensor
-    //send value to register
-    bool write_status = 0;
-    Wire.beginTransmission(_address); //open communication with 
-    Wire.write(register_addr);  
-    Wire.write(value); 
-    Wire.endTransmission(); 
-
-    return write_status; //returns whether the write succeeded or failed
+MPU9250::MPU9250(const char* i2cAddress) : MPU9250(I2Cdev::DEFAULT_I2C_ADDRESS, MPU9250_DEFAULT_ADDRESS, MPU9250_MAG_ADDRESS) {
 }
 
-bool MPU9250::writeMagRegister(const uint8_t register_addr, const uint8_t value) {
-    //send write call to sensor address
-    //send register address to sensor
-    //send value to register
-    bool write_status = 0;
-    Wire.beginTransmission(_mag_address); //open communication with 
-    Wire.write(register_addr);  
-    Wire.write(value); 
-    Wire.endTransmission(); 
-
-    return write_status; //returns whether the write succeeded or failed
+MPU9250::MPU9250(uint8_t mpuAddress): MPU9250(mpuAddress, MPU9250_MAG_ADDRESS) {
 }
 
-bool MPU9250::writeRegisters(const uint8_t msb_register, const uint8_t msb_value, const uint8_t lsb_register, const uint8_t lsb_value) { 
-    //send write call to sensor address
-    //send register address to sensor
-    //send value to register
-    bool msb_bool, lsb_bool;
-    msb_bool = writeRegister(msb_register, msb_value);
-    lsb_bool = writeRegister(lsb_register, lsb_value);
-    return 0; //returns whether the write succeeded or failed
+MPU9250::MPU9250(uint8_t mpuAddress, uint8_t magAddress) : MPU9250(I2Cdev::DEFAULT_I2C_ADDRESS, mpuAddress, magAddress) {
 }
 
-bool MPU9250::writeMaskedRegister(const uint8_t register_addr, const uint8_t mask, const uint8_t value) {
-    uint8_t masked_value = (mask & value);
-    uint8_t regvalue = readRegister(register_addr);
-    regvalue = regvalue & ~mask; // Zero Mask bits
-    regvalue = regvalue | masked_value; //Set Mask value
-    return writeRegister(register_addr, regvalue);
+MPU9250::MPU9250(const char* i2cAddress, uint8_t mpuAddress, uint8_t magAddress) : _i2c(i2cAddress), _mpuAddress(mpuAddress),
+                                                                                   _magAddress(magAddress) {
 }
 
-uint8_t MPU9250::readRegister(const uint8_t register_addr) {
-    //call sensor by address
-    //call registers
-    uint8_t data = 0;
-
-    Wire.beginTransmission(_address); 
-    Wire.write(register_addr); 
-    Wire.endTransmission(); 
-
-    Wire.requestFrom((int)_address, 1);
-
-    while(Wire.available()) {
-        data = Wire.read();    // receive a byte as character
+template<typename T, typename F>
+bool MPU9250::updateRegister(F func) {
+    T reg;
+    if (!readRegister(reg)) {
+        return false;
     }
 
-    return data; //return the data returned from the register
+    func(reg);
+    return writeRegister(reg);
 }
 
-uint8_t MPU9250::readMagRegister(const uint8_t register_addr) {
-    //call sensor by address
-    //call registers
-    uint8_t data = 0;
-
-    Wire.beginTransmission(_mag_address); 
-    Wire.write(register_addr); 
-    Wire.endTransmission(); 
-
-    Wire.requestFrom((int)_address, 1);
-
-    while(Wire.available()) {
-        data = Wire.read();    // receive a byte as character
+template<typename T, typename F>
+bool MPU9250::parseRegister(F func) {
+    T reg;
+    if (!readRegister(reg)) {
+        return false;
     }
-
-    return data; //return the data returned from the register
+    func(reg);
+    return true;
 }
 
-uint16_t MPU9250::readRegisters(const uint8_t msb_register, const uint8_t lsb_register) {
-    uint8_t msb = readRegister(msb_register);
-    uint8_t lsb = readRegister(lsb_register);
-    return (((int16_t)msb) << 8) | lsb;
-
+template<typename T>
+bool MPU9250::readRegister(T& t) {
+    static_assert(t.IOFlag & IO_FLAG::R);
+    if (_i2c.readByte(_mpuAddress, t.Address, &t.getData().Raw) > 0) {
+        return true;
+    } else {
+        fprintf(stderr, "Error while reading from register(%x)!", t.Address);
+        return false;
+    }
 }
 
-uint8_t MPU9250::readMaskedRegister(const uint8_t register_addr, const uint8_t mask) {
-    uint8_t data = readRegister(register_addr);
-    return (data & mask);
-
-    //every reference to this is wrong!!! fix them
+template<typename T>
+bool MPU9250::writeRegister(T& t) {
+    static_assert(t.IOFlag & IO_FLAG::W);
+    if (_i2c.writeByte(_mpuAddress, t.Address, t.getData().Raw)) {
+        return true;
+    } else {
+        fprintf(stderr, "Error while writing to register(%x)!", t.Address);
+        return false;
+    }
 }
 
-/** Power on and prepare for general usage.
- * This will activate the device and take it out of sleep mode (which must be done
- * after start-up). This function also sets both the accelerometer and the gyroscope
- * to their most sensitive settings, namely +/- 2g and +/- 250 degrees/sec, and sets
- * the clock source to use the X Gyro for reference, which is slightly better than
- * the default internal clock source.
- */
-void MPU9250::initialize(void) {
-    Wire.begin(); 
-
-    setClockSource(0);
-    setFullScaleGyroRange(MPU9250_GYRO_FULL_SCALE_250DPS);
-    setFullScaleAccelRange(MPU9250_FULL_SCALE_8G);
+void MPU9250::initialize() {
+    setClockSource(PWR_MGMT1_DATA::CLKSEL_AUTO_PLL);
+    setFullScaleGyroRange(GYRO_CONFIG_DATA::FULL_SCALE_250DPS);
+    setFullScaleAccelRange(ACCEL_CONFIG_DATA::FULL_SCALE_2G);
     setSleepEnabled(false);
 }
 
@@ -277,37 +225,16 @@ bool MPU9250::setDLPFMode(const uint8_t mode) {
     return writeMaskedRegister(MPU9250_CONFIG, MPU9250_DLPF_CFG_MASK, mode); //MPU9250_CONFIG, MPU9250_CFG_DLPF_CFG_BIT, MPU9250_CFG_DLPF_CFG_LENGTH, mode);
 }
 
-// GYRO_CONFIG register
-
-/** Get full-scale gyroscope range.
- * The FS_SEL parameter allows setting the full-scale range of the gyro sensors,
- * as described in the table below.
- *
- * <pre>
- * 0 = +/- 250 degrees/sec
- * 1 = +/- 500 degrees/sec
- * 2 = +/- 1000 degrees/sec
- * 3 = +/- 2000 degrees/sec
- * </pre>
- *
- * @return Current full-scale gyroscope range setting
- * @see MPU9250_GYRO_FS_250
- * @see MPU9250_GYRO_CONFIG
- * @see MPU9250_GYRO_FS_SEL_MASK
- */
-uint8_t MPU9250::getFullScaleGyroRange(void) {
-    return readMaskedRegister(MPU9250_GYRO_CONFIG, MPU9250_GYRO_FS_SEL_MASK);
+bool MPU9250::getFullScaleGyroRange(uint8_t& out) {
+    return parseRegister<GYRO_CONFIG>([&out](auto& reg) {
+        out = reg.getData().Structed.GYRO_FS_SEL;
+    });
 }
 
-/** Set full-scale gyroscope range.
- * @param range New full-scale gyroscope range value
- * @see getFullScaleRange()
- * @see MPU9250_GYRO_FS_250
- * @see MPU9250_CONFIG
- * @see MPU9250_GYRO_FS_SEL_MASK
- */
-bool MPU9250::setFullScaleGyroRange(const uint8_t range) {
-    return writeMaskedRegister(MPU9250_GYRO_CONFIG, MPU9250_GYRO_FS_SEL_MASK, range); //MPU9250_GCONFIG_FS_SEL_BIT, MPU9250_GCONFIG_FS_SEL_LENGTH, range);
+bool MPU9250::setFullScaleGyroRange(uint8_t range) {
+    return updateRegister<GYRO_CONFIG>([=](auto& reg){
+        reg.getData().Structed.GYRO_FS_SEL = range;
+    });
 }
 
 // ACCEL_CONFIG register
@@ -363,36 +290,16 @@ bool MPU9250::setAccelZSelfTest(const uint8_t enabled) {
     return writeRegister(MPU9250_SELF_TEST_Z_ACCEL, enabled); //MPU9250_RA_ACCEL_CONFIG, MPU9250_ACONFIG_ZA_ST_BIT, enabled);//check if ACCEL CONFIG2 is relevant
 }
 
-/** Get full-scale accelerometer range.
- * The FS_SEL parameter allows setting the full-scale range of the accelerometer
- * sensors, as described in the table below.
- *
- * <pre>
- * 0 = +/- 2g
- * 1 = +/- 4g
- * 2 = +/- 8g
- * 3 = +/- 16g
- * </pre>
- *
- * @return Current full-scale accelerometer range setting
- * @see MPU9250_ACCEL_FS_2
- * @see MPU9250_ACCEL_CONFIG
- * @see MPU9250_ACCEL_FS_SEL_MASK
- */
-uint8_t MPU9250::getFullScaleAccelRange(void) {
-    return readMaskedRegister(MPU9250_ACCEL_CONFIG, MPU9250_ACCEL_FS_SEL_MASK); //MPU9250_ACONFIG_AFS_SEL_BIT, MPU9250_ACONFIG_AFS_SEL_LENGTH, //check if ACCEL CONFIG2 is relevant
+bool MPU9250::getFullScaleAccelRange(uint8_t& out) {
+    return parseRegister<ACCEL_CONFIG>([&out](auto& reg) {
+        out = reg.getData().Structed.ACCEL_FS_SEL;
+    });
 }
 
-/** Set full-scale accelerometer range.
- * @param range New full-scale accelerometer range setting
- * @see getFullScaleAccelRange()
- */
-bool MPU9250::setFullScaleAccelRange(const uint8_t range) {
-    if(range < 3){
-        return 0;
-    } else {
-        return writeMaskedRegister(MPU9250_ACCEL_CONFIG, MPU9250_ACCEL_FS_SEL_MASK, range);
-    }
+bool MPU9250::setFullScaleAccelRange(uint8_t range) {
+    return updateRegister<ACCEL_CONFIG>([=](auto& reg) {
+        reg.getData().Structed.ACCEL_FS_SEL = range;
+    });
 }
 /** Get the high-pass filter configuration.
  * The DHPF is a filter module in the path leading to motion detectors (Free
@@ -968,7 +875,7 @@ bool MPU9250::setMasterClockSpeed(const uint8_t speed) {
  * operation, and if it is cleared, then it's a write operation. The remaining
  * bits (6-0) are the 7-bit device address of the slave device.
  *
- * In read mode, the result of the read is placed in the lowest available 
+ * In read mode, the result of the read is placed in the lowest available
  * EXT_SENS_DATA register. For further information regarding the allocation of
  * read results, please refer to the EXT_SENS_DATA register description
  * (Registers 73 - 96).
@@ -1256,7 +1163,7 @@ bool MPU9250::setSlave4Register(const uint8_t reg) {
  * @see MPU9250_RA_I2C_SLV4_DO
  */
 bool MPU9250::setSlave4OutputByte(const uint8_t data) {
-    return writeRegister(MPU9250_I2C_SLV4_DO, data); 
+    return writeRegister(MPU9250_I2C_SLV4_DO, data);
 }
 
 /** Get the enabled value for the Slave 4.
@@ -2420,32 +2327,16 @@ bool MPU9250::reset(void) {
     return writeMaskedRegister(MPU9250_PWR_MGMT_1, MPU9250_H_RESET_MASK, true);
 }
 
-/** Get sleep mode status.
- * Setting the SLEEP bit in the register puts the device into very low power
- * sleep mode. In this mode, only the serial interface and internal registers
- * remain active, allowing for a very low standby current. Clearing this bit
- * /** Set X-axis accelerometer standby enabled status.
-puts the device back into normal mode. To save power, the individual standby
- * selections for each of the gyros should be used if any gyro axis is not used
- * by the application.
- * @return Current sleep mode enabled status
- * @see MPU9250_RA_PWR_MGMT_1
- * @see MPU9250_PWR1_SLEEP_BIT
- */
-bool MPU9250::getSleepEnabled(void) {
-    uint8_t response = readMaskedRegister(MPU9250_PWR_MGMT_1, MPU9250_SLEEP_MASK);
-    return (response != 0);
+bool MPU9250::getSleepEnabled(bool &out) {
+    return parseRegister<PWR_MGMT1>([&out](auto& reg) {
+        return reg.getData().Structed.SLEEP;
+    });
 }
 
-/** Set sleep mode status.
- * @param enabled New sleep mode enabled status
- * @see getSleepEnabled()
- * @see MPU9250_PWR_MGMT_1
- * @see MPU9250_SLEEP_MASK
- */
-bool MPU9250::setSleepEnabled(const bool enabled) {
-    // Set X-axis accelerometer standby enabled status.
-    return writeMaskedRegister(MPU9250_PWR_MGMT_1, MPU9250_SLEEP_MASK, enabled);
+bool MPU9250::setSleepEnabled(bool enabled) {
+    return updateRegister<PWR_MGMT1>([=](auto& reg) {
+        reg.getData().Structed.SLEEP = enabled;
+    });
 }
 
 /** Get wake cycle enabled status.
@@ -2472,49 +2363,16 @@ bool MPU9250::setWakeCycleEnabled(const bool enabled) {
     return writeMaskedRegister(MPU9250_PWR_MGMT_1, MPU9250_CYCLE_MASK, enabled);
 }
 
-/** Get clock source setting.
- * @return Current clock source setting
- * @see MPU9250_PWR_MGMT_1
- * @see MPU9250_CLKSEL_MASK
- */
-uint8_t MPU9250::getClockSource(void) {
-    return readMaskedRegister(MPU9250_PWR_MGMT_1, MPU9250_CLKSEL_MASK);
+bool MPU9250::getClockSource(uint8_t& out) {
+    return parseRegister<PWR_MGMT1>([&out](auto& reg) {
+        out = reg.getData().Structed.CLKSEL;
+    });
 }
 
-/** Set clock source setting.
- * An internal 8MHz oscillator, gyroscope based clock, or external sources can
- * be selected as the MPU-60X0 clock source. When the internal 8 MHz oscillator
- * or an external source is chosen as the clock source, the MPU-60X0 can operate
- * in low power modes with the gyroscopes disabled.
- *
- * Upon power up, the MPU-60X0 clock source defaults to the internal oscillator.
- * However, it is highly recommended that the device be configured to use one of
- * the gyroscopes (or an external clock source) as the clock reference for
- * improved stability. The clock source can be selected according to the following table:
- *
- * <pre>
- * CLK_SEL | Clock Source
- * --------+--------------------------------------
- * 0       | Internal oscillator
- * 1       | PLL with X Gyro reference
- * 2       | PLL with Y Gyro reference
- * 3       | PLL with Z Gyro reference
- * 4       | PLL with external 32.768kHz reference
- * 5       | PLL with external 19.2MHz reference
- * 6       | Reserved
- * 7       | Stops the clock and keeps the timing generator in reset
- * </pre>
- *
- * @param source New clock source setting
- * @see getClockSource()
- * @see MPU9250_PWR_MGMT_1
- * @see MPU9250_CLKSEL_MASK
- */
-bool MPU9250::setClockSource(const uint8_t source) {
-    if(source > 7) {
-        return 0;
-    }
-    return writeMaskedRegister(MPU9250_PWR_MGMT_1, MPU9250_CLKSEL_MASK, source);
+bool MPU9250::setClockSource(uint8_t source) {
+    return updateRegister<PWR_MGMT1>([=](auto& reg) {
+        reg.getData().Structed.CLKSEL = source;
+    });
 }
 
 /** Set X-axis accelerometer standby enabled status.
@@ -3039,7 +2897,7 @@ void MPU9250::readMemoryBlock(uint8_t *data, uint16_t dataSize, uint8_t bank, ui
 
         // read the chunk of data as specified
         readMemoryByte(); //readRegister(MPU9250_RA_MEM_R_W); //add read commands which handle the number of subsequent registers listed here: //MPU9250_RA_MEM_R_W, chunkSize, data + i);
-        
+
         // increase byte index by [chunkSize]
         i += chunkSize;
 
@@ -3078,7 +2936,7 @@ bool MPU9250::writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t b
 
         // make sure this chunk doesn't go past the bank boundary (256 bytes)
         if (chunkSize > 256 - address) chunkSize = 256 - address;
-        
+
         if (useProgMem) {
             // write the chunk of data as specified
             for (j = 0; j < chunkSize; j++) progBuffer[j] = pgm_read_byte(data + i + j);
@@ -3202,7 +3060,7 @@ bool MPU9250::writeDMPConfigurationSet(const uint8_t *data, uint16_t dataSize, b
             Serial.println(" found...");*/
             if (special == 0x01) {
                 // enable DMP-related interrupts
-                
+
                 //setIntZeroMotionEnabled(true);
                 //setIntFIFOBufferOverflowEnabled(true);
                 //setIntDMPEnabled(true);
@@ -3214,7 +3072,7 @@ bool MPU9250::writeDMPConfigurationSet(const uint8_t *data, uint16_t dataSize, b
                 success = false;
             }
         }
-        
+
         if (!success) {
             if(useProgMem) {
                 //free(progBuffer);
@@ -3298,9 +3156,9 @@ bool MPU9250::disableAccelerometer(void) {
 }
 
 void MPU9250::getAccelerometerTestData(uint8_t ax, uint8_t ay, uint8_t az) {
-        ax = readRegister(MPU9250_SELF_TEST_X_ACCEL); 
-        ay = readRegister(MPU9250_SELF_TEST_Y_ACCEL); 
-        az = readRegister(MPU9250_SELF_TEST_Z_ACCEL); 
+        ax = readRegister(MPU9250_SELF_TEST_X_ACCEL);
+        ay = readRegister(MPU9250_SELF_TEST_Y_ACCEL);
+        az = readRegister(MPU9250_SELF_TEST_Z_ACCEL);
 }
 
 bool MPU9250::accelerometerXIsEnabled(void) {
@@ -3433,8 +3291,8 @@ bool MPU9250::disableGyro(void) {
 }
 
 void MPU9250::getGyroTestData(uint8_t gx, uint8_t gy, uint8_t gz) {
-        gx = readRegister(MPU9250_SELF_TEST_X_GYRO); 
-        gy = readRegister(MPU9250_SELF_TEST_Y_GYRO); 
+        gx = readRegister(MPU9250_SELF_TEST_X_GYRO);
+        gy = readRegister(MPU9250_SELF_TEST_Y_GYRO);
         gz = readRegister(MPU9250_SELF_TEST_Z_GYRO);
 }
 
@@ -3464,7 +3322,7 @@ bool MPU9250::gyroZIsEnabled(void) {
  */
 int16_t MPU9250::getRotationX(void) {
     if(gyroXIsEnabled()){
-        return (int16_t) readRegisters(MPU9250_GYRO_XOUT_H, MPU9250_GYRO_XOUT_L); 
+        return (int16_t) readRegisters(MPU9250_GYRO_XOUT_H, MPU9250_GYRO_XOUT_L);
     } else {
         return 0;
     }
@@ -3478,7 +3336,7 @@ int16_t MPU9250::getRotationX(void) {
  */
 int16_t MPU9250::getRotationY(void) {
     if(gyroYIsEnabled()){
-        return (int16_t) readRegisters(MPU9250_GYRO_YOUT_H, MPU9250_GYRO_YOUT_L); 
+        return (int16_t) readRegisters(MPU9250_GYRO_YOUT_H, MPU9250_GYRO_YOUT_L);
     } else {
         return 0;
     }
@@ -3492,7 +3350,7 @@ int16_t MPU9250::getRotationY(void) {
  */
 int16_t MPU9250::getRotationZ(void) {
     if(gyroZIsEnabled()){
-        return (int16_t) readRegisters(MPU9250_GYRO_ZOUT_H, MPU9250_GYRO_ZOUT_L); 
+        return (int16_t) readRegisters(MPU9250_GYRO_ZOUT_H, MPU9250_GYRO_ZOUT_L);
     } else {
         return 0;
     }
@@ -3555,12 +3413,12 @@ void MPU9250::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int
 
     //get accel and gyro
     getMotion6(ax, ay, az, gx, gy, gz);
-    
+
     //read magnetometer
     setI2CBypassEnabled(true); //set i2c bypass enable pin to true to access magnetometer
     writeMagRegister(MPU9250_MAG_CNTL, 0x01); //enable the magnetometer
     //mag_addr = readRegister(MPU9250_MAG_ADDRESS); //check what this static variable is/does
-    
+
     mx_low = readMagRegister(MPU9250_MAG_XOUT_L);
     mx_high = readMagRegister(MPU9250_MAG_XOUT_H);
     my_low = readMagRegister(MPU9250_MAG_YOUT_L);
@@ -3570,7 +3428,7 @@ void MPU9250::getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int
 
     *mx = (((int16_t)mx_high) << 8) | mx_low;
     *my = (((int16_t)my_high) << 8) | my_low;
-    *mz = (((int16_t)mz_high) << 8) | mz_low;       
+    *mz = (((int16_t)mz_high) << 8) | mz_low;
 }
 
 //Temperature functions
@@ -3591,7 +3449,7 @@ bool MPU9250::temperatureIsEnabled(void) {
 int16_t MPU9250::getTemperature(void) {
     if(temperatureIsEnabled()){
         //get currnet internal temperature reading in 16-bit 2's complement format
-        return (int16_t) readRegisters(MPU9250_TEMP_OUT_H, MPU9250_TEMP_OUT_L); 
+        return (int16_t) readRegisters(MPU9250_TEMP_OUT_H, MPU9250_TEMP_OUT_L);
         //WARNING readRegisters function currently returns uint16_t instead of int16_t
         //((Temp_out - room_temp_offset)/temp_sensitivity) + 21; //celcius
     } else {

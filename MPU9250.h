@@ -14,6 +14,9 @@
 #define _MPU9250_H_
 
 #include <stdint.h>
+#include <stdio.h>
+// #include <functional>
+
 #include "I2Cdev.h"
 // #include <avr/pgmspace.h>
 
@@ -36,9 +39,9 @@
 
 
 enum IO_FLAG {
-    R,
-    W,
-    RW
+    R = 1,
+    W = 2,
+    RW = 3
 };
 
 template<uint8_t A, IO_FLAG F, typename T=uint8_t>
@@ -117,10 +120,10 @@ struct GYRO_CONFIG_DATA {
     uint8_t YGYRO_CTEN : 1;
     uint8_t XGYRO_CTEN : 1;
 
-    static const uint8_t GYRO_FULL_SCALE_250DPS     = 0x0;
-    static const uint8_t GYRO_FULL_SCALE_500DPS     = 0x1;
-    static const uint8_t GYRO_FULL_SCALE_1000DPS    = 0x2;
-    static const uint8_t GYRO_FULL_SCALE_2000DPS    = 0x3;
+    static const uint8_t FULL_SCALE_250DPS     = 0x0;
+    static const uint8_t FULL_SCALE_500DPS     = 0x1;
+    static const uint8_t FULL_SCALE_1000DPS    = 0x2;
+    static const uint8_t FULL_SCALE_2000DPS    = 0x3;
 };
 
 struct ACCEL_CONFIG_DATA {
@@ -467,319 +470,325 @@ class MPU9250 {
 
         void initialize();
 
-        uint8_t getAuxVDDIOLevel(void);
-        bool setAuxVDDIOLevel(const uint8_t level);
-        uint8_t getRate(void);
-        bool setRate(const uint8_t rate);
-        uint8_t getExternalFrameSync(void);
-        bool setExternalFrameSync(const uint8_t sync);
-        uint8_t getDLPFMode(void);
-        bool setDLPFMode(const uint8_t mode);
-        uint8_t getDHPFMode(void);
-        bool setDHPFMode(const uint8_t bandwidth);
-        uint8_t getFreefallDetectionThreshold(void);
-        bool setFreefallDetectionThreshold(const uint8_t threshold);
-        uint8_t getFreefallDetectionDuration(void);
-        bool setFreefallDetectionDuration(const uint8_t duration);
-        uint8_t getMotionDetectionThreshold(void);
-        bool setMotionDetectionThreshold(const uint8_t threshold);
-        uint8_t getMotionDetectionDuration(void);
-        bool setMotionDetectionDuration(const uint8_t duration);
-        uint8_t getZeroMotionDetectionThreshold(void);
-        bool setZeroMotionDetectionThreshold(const uint8_t threshold);
-        uint8_t getZeroMotionDetectionDuration(void);
-        bool setZeroMotionDetectionDuration(const uint8_t duration);
-        bool getSlave2FIFOEnabled(void);
-        bool setSlave2FIFOEnabled(const bool enabled);
-        bool getSlave1FIFOEnabled(void);
-        bool setSlave1FIFOEnabled(const bool enabled);
-        bool getSlave0FIFOEnabled(void);
-        bool setSlave0FIFOEnabled(const bool enabled);
-        bool getMultiMasterEnabled(void);
-        bool setMultiMasterEnabled(const bool enabled);
-        bool getWaitForExternalSensorEnabled(void);
-        bool setWaitForExternalSensorEnabled(const bool enabled);
-        bool getSlave3FIFOEnabled(void);
-        bool setSlave3FIFOEnabled(const bool enabled);
+        uint8_t getAuxVDDIOLevel(void);        // -
+        bool setAuxVDDIOLevel(const uint8_t level);        // -
+        uint8_t getRate(void);        // -
+        bool setRate(const uint8_t rate);        // -
+        uint8_t getExternalFrameSync(void);        // -
+        bool setExternalFrameSync(const uint8_t sync);        // -
+        uint8_t getDLPFMode(void);        // -
+        bool setDLPFMode(const uint8_t mode);        // -
+        uint8_t getDHPFMode(void);        // -
+        bool setDHPFMode(const uint8_t bandwidth);        // -
+        uint8_t getFreefallDetectionThreshold(void);        // -
+        bool setFreefallDetectionThreshold(const uint8_t threshold);        // -
+        uint8_t getFreefallDetectionDuration(void);        // -
+        bool setFreefallDetectionDuration(const uint8_t duration);        // -
+        uint8_t getMotionDetectionThreshold(void);        // -
+        bool setMotionDetectionThreshold(const uint8_t threshold);        // -
+        uint8_t getMotionDetectionDuration(void);        // -
+        bool setMotionDetectionDuration(const uint8_t duration);        // -
+        uint8_t getZeroMotionDetectionThreshold(void);        // -
+        bool setZeroMotionDetectionThreshold(const uint8_t threshold);        // -
+        uint8_t getZeroMotionDetectionDuration(void);        // -
+        bool setZeroMotionDetectionDuration(const uint8_t duration);        // -
+        bool getSlave2FIFOEnabled(void);        // -
+        bool setSlave2FIFOEnabled(const bool enabled);        // -
+        bool getSlave1FIFOEnabled(void);        // -
+        bool setSlave1FIFOEnabled(const bool enabled);        // -
+        bool getSlave0FIFOEnabled(void);        // -
+        bool setSlave0FIFOEnabled(const bool enabled);        // -
+        bool getMultiMasterEnabled(void);        // -
+        bool setMultiMasterEnabled(const bool enabled);        // -
+        bool getWaitForExternalSensorEnabled(void);        // -
+        bool setWaitForExternalSensorEnabled(const bool enabled);        // -
+        bool getSlave3FIFOEnabled(void);        // -
+        bool setSlave3FIFOEnabled(const bool enabled);        // -
 
-        bool getSlaveReadWriteTransitionEnabled(void);
-        bool setSlaveReadWriteTransitionEnabled(const bool enabled);
-        uint8_t getMasterClockSpeed(void);
-        bool setMasterClockSpeed(const uint8_t speed);
-        uint8_t getSlaveAddress(uint8_t num);
-        bool setSlaveAddress(uint8_t num, uint8_t address);
-        uint8_t getSlaveRegister(uint8_t num);
-        bool setSlaveRegister(uint8_t num, uint8_t reg);
-        bool getSlaveEnabled(uint8_t num);
-        bool setSlaveEnabled(uint8_t num, const bool enabled);
-        bool getSlaveWordByteSwap(uint8_t num);
-        bool setSlaveWordByteSwap(uint8_t num, const bool enabled);
-        bool getSlaveWriteMode(uint8_t num);
-        bool setSlaveWriteMode(uint8_t num, const bool mode);
-        bool getSlaveWordGroupOffset(uint8_t num);
-        bool setSlaveWordGroupOffset(uint8_t num, const bool enabled);
-        uint8_t getSlaveDataLength(uint8_t num);
-        bool setSlaveDataLength(uint8_t num, const uint8_t length);
-        uint8_t getSlave4Address(void);
-        bool setSlave4Address(const uint8_t address);
-        uint8_t getSlave4Register(void);
-        bool setSlave4Register(const uint8_t reg);
-        bool setSlave4OutputByte(const uint8_t data);
-        bool getSlave4Enabled(void);
-        bool setSlave4Enabled(const bool enabled);
-        bool getSlave4InterruptEnabled(void);
-        bool setSlave4InterruptEnabled(const bool enabled);
-        bool getSlave4WriteMode(void);
-        bool setSlave4WriteMode(const bool mode);
-        uint8_t getSlave4MasterDelay(void);
-        bool setSlave4MasterDelay(const uint8_t delay);
-        uint8_t getSlate4InputByte(void);
-        bool getPassthroughStatus(void);
-        bool getSlave4IsDone(void);
-        bool getLostArbitration(void);
-        bool getSlave4Nack(void);
-        bool getSlave3Nack(void);
-        bool getSlave2Nack(void);
-        bool getSlave1Nack(void);
-        bool getSlave0Nack(void);
-        bool getInterruptMode(void);
-        bool setInterruptMode(const bool mode);
-        bool getInterruptDrive(void);
-        bool setInterruptDrive(const bool drive);
-        bool getInterruptLatch(void);
-        bool setInterruptLatch(const bool latch);
-        bool getInterruptLatchClear(void);
-        bool setInterruptLatchClear(const bool clear);
-        bool getFSyncInterruptLevel(void);
-        bool setFSyncInterruptLevel(const bool level);
-        bool getFSyncInterruptEnabled(void);
-        bool setFSyncInterruptEnabled(const bool enabled);
-        bool getI2CBypassEnabled(void);
-        bool setI2CBypassEnabled(const bool enabled);
-        bool getClockOutputEnabled(void);
-        bool setClockOutputEnabled(const bool enabled);
-        uint8_t getIntEnabled(void);
-        bool setIntEnabled(const uint8_t enabled);
-        bool getIntFreefallEnabled(void);
-        bool setIntFreefallEnabled(const bool enabled);
-        bool getIntMotionEnabled(void);
-        bool setIntMotionEnabled(const bool enabled);
-        bool getIntZeroMotionEnabled(void);
-        bool setIntZeroMotionEnabled(const bool enabled);
-        bool getIntFIFOBufferOverflowEnabled(void);
-        bool setIntFIFOBufferOverflowEnabled(const bool enabled);
-        bool getIntI2CMasterEnabled(void);
-        bool setIntI2CMasterEnabled(const bool enabled);
-        bool getIntDataReadyEnabled(void);
-        bool setIntDataReadyEnabled(const bool enabled);
-        uint8_t getIntStatus(void);
-        bool getIntFreefallStatus(void);
-        bool getIntMotionStatus(void);
-        bool getIntZeroMotionStatus(void);
-        bool getIntFIFOBufferOverflowStatus(void);
-        bool getIntI2CMasterStatus(void);
-        bool getIntDataReadyStatus(void);
-
-
-        uint8_t getExternalSensorByte(int position);
-        uint16_t getExternalSensorWord(int position);
-        uint32_t getExternalSensorDWord(int position);
-        bool getXNegMotionDetected(void);
-        bool getXPosMotionDetected(void);
-        bool getYNegMotionDetected(void);
-        bool getYPosMotionDetected(void);
-        bool getZNegMotionDetected(void);
-        bool getZPosMotionDetected(void);
-        bool getZeroMotionDetected(void);
-        bool setSlaveOutputByte(uint8_t num, const uint8_t data);
-        bool getExternalShadowDelayEnabled(void);
-        bool setExternalShadowDelayEnabled(const bool enabled);
-        bool getSlaveDelayEnabled(const uint8_t num);
-        bool setSlaveDelayEnabled(const uint8_t num, const bool enabled);
-        uint8_t getFreefallDetectionCounterDecrement(void);
-        bool setFreefallDetectionCounterDecrement(const uint8_t decrement);
-        uint8_t getMotionDetectionCounterDecrement(void);
-        void setMotionDetectionCounterDecrement(const uint8_t decrement);
-        bool getFIFOEnabled(void);
-        bool setFIFOEnabled(const bool enabled);
-        bool getI2CMasterModeEnabled(void);
-        bool setI2CMasterModeEnabled(const bool enabled);
-        bool switchSPIEnabled(const bool enabled);
-        bool resetFIFO(void);
-        bool resetI2CMaster(void);
-        bool resetSensors(void);
-        bool reset(void);
-        bool getSleepEnabled(void);
-        bool setSleepEnabled(const bool enabled);
-        bool getWakeCycleEnabled(void);
-        bool setWakeCycleEnabled(const bool enabled);
-        uint8_t getClockSource(void);
-        bool setClockSource(const uint8_t source);
-        uint8_t getWakeFrequency(void);
-        bool setWakeFrequency(const uint8_t frequency);
-        uint16_t getFIFOCount(void);
-        uint8_t getFIFOByte(void);
-        bool setFIFOByte(const uint8_t data);
+        bool getSlaveReadWriteTransitionEnabled(void);        // -
+        bool setSlaveReadWriteTransitionEnabled(const bool enabled);        // -
+        uint8_t getMasterClockSpeed(void);        // -
+        bool setMasterClockSpeed(const uint8_t speed);        // -
+        uint8_t getSlaveAddress(uint8_t num);        // -
+        bool setSlaveAddress(uint8_t num, uint8_t address);        // -
+        uint8_t getSlaveRegister(uint8_t num);        // -
+        bool setSlaveRegister(uint8_t num, uint8_t reg);        // -
+        bool getSlaveEnabled(uint8_t num);        // -
+        bool setSlaveEnabled(uint8_t num, const bool enabled);        // -
+        bool getSlaveWordByteSwap(uint8_t num);        // -
+        bool setSlaveWordByteSwap(uint8_t num, const bool enabled);        // -
+        bool getSlaveWriteMode(uint8_t num);        // -
+        bool setSlaveWriteMode(uint8_t num, const bool mode);        // -
+        bool getSlaveWordGroupOffset(uint8_t num);        // -
+        bool setSlaveWordGroupOffset(uint8_t num, const bool enabled);        // -
+        uint8_t getSlaveDataLength(uint8_t num);        // -
+        bool setSlaveDataLength(uint8_t num, const uint8_t length);        // -
+        uint8_t getSlave4Address(void);        // -
+        bool setSlave4Address(const uint8_t address);        // -
+        uint8_t getSlave4Register(void);        // -
+        bool setSlave4Register(const uint8_t reg);        // -
+        bool setSlave4OutputByte(const uint8_t data);        // -
+        bool getSlave4Enabled(void);        // -
+        bool setSlave4Enabled(const bool enabled);        // -
+        bool getSlave4InterruptEnabled(void);        // -
+        bool setSlave4InterruptEnabled(const bool enabled);        // -
+        bool getSlave4WriteMode(void);        // -
+        bool setSlave4WriteMode(const bool mode);        // -
+        uint8_t getSlave4MasterDelay(void);        // -
+        bool setSlave4MasterDelay(const uint8_t delay);        // -
+        uint8_t getSlate4InputByte(void);        // -
+        bool getPassthroughStatus(void);        // -
+        bool getSlave4IsDone(void);        // -
+        bool getLostArbitration(void);        // -
+        bool getSlave4Nack(void);        // -
+        bool getSlave3Nack(void);        // -
+        bool getSlave2Nack(void);        // -
+        bool getSlave1Nack(void);        // -
+        bool getSlave0Nack(void);        // -
+        bool getInterruptMode(void);        // -
+        bool setInterruptMode(const bool mode);        // -
+        bool getInterruptDrive(void);        // -
+        bool setInterruptDrive(const bool drive);        // -
+        bool getInterruptLatch(void);        // -
+        bool setInterruptLatch(const bool latch);        // -
+        bool getInterruptLatchClear(void);        // -
+        bool setInterruptLatchClear(const bool clear);        // -
+        bool getFSyncInterruptLevel(void);        // -
+        bool setFSyncInterruptLevel(const bool level);        // -
+        bool getFSyncInterruptEnabled(void);        // -
+        bool setFSyncInterruptEnabled(const bool enabled);        // -
+        bool getI2CBypassEnabled(void);        // -
+        bool setI2CBypassEnabled(const bool enabled);        // -
+        bool getClockOutputEnabled(void);        // -
+        bool setClockOutputEnabled(const bool enabled);        // -
+        uint8_t getIntEnabled(void);        // -
+        bool setIntEnabled(const uint8_t enabled);        // -
+        bool getIntFreefallEnabled(void);        // -
+        bool setIntFreefallEnabled(const bool enabled);        // -
+        bool getIntMotionEnabled(void);        // -
+        bool setIntMotionEnabled(const bool enabled);        // -
+        bool getIntZeroMotionEnabled(void);        // -
+        bool setIntZeroMotionEnabled(const bool enabled);        // -
+        bool getIntFIFOBufferOverflowEnabled(void);        // -
+        bool setIntFIFOBufferOverflowEnabled(const bool enabled);        // -
+        bool getIntI2CMasterEnabled(void);        // -
+        bool setIntI2CMasterEnabled(const bool enabled);        // -
+        bool getIntDataReadyEnabled(void);        // -
+        bool setIntDataReadyEnabled(const bool enabled);        // -
+        uint8_t getIntStatus(void);        // -
+        bool getIntFreefallStatus(void);        // -
+        bool getIntMotionStatus(void);        // -
+        bool getIntZeroMotionStatus(void);        // -
+        bool getIntFIFOBufferOverflowStatus(void);        // -
+        bool getIntI2CMasterStatus(void);        // -
+        bool getIntDataReadyStatus(void);        // -
 
 
+        uint8_t getExternalSensorByte(int position);        // -
+        uint16_t getExternalSensorWord(int position);        // -
+        uint32_t getExternalSensorDWord(int position);        // -
+        bool getXNegMotionDetected(void);        // -
+        bool getXPosMotionDetected(void);        // -
+        bool getYNegMotionDetected(void);        // -
+        bool getYPosMotionDetected(void);        // -
+        bool getZNegMotionDetected(void);        // -
+        bool getZPosMotionDetected(void);        // -
+        bool getZeroMotionDetected(void);        // -
+        bool setSlaveOutputByte(uint8_t num, const uint8_t data);        // -
+        bool getExternalShadowDelayEnabled(void);        // -
+        bool setExternalShadowDelayEnabled(const bool enabled);        // -
+        bool getSlaveDelayEnabled(const uint8_t num);        // -
+        bool setSlaveDelayEnabled(const uint8_t num, const bool enabled);        // -
+        uint8_t getFreefallDetectionCounterDecrement(void);        // -
+        bool setFreefallDetectionCounterDecrement(const uint8_t decrement);        // -
+        uint8_t getMotionDetectionCounterDecrement(void);        // -
+        void setMotionDetectionCounterDecrement(const uint8_t decrement);        // -
+        bool getFIFOEnabled(void);        // -
+        bool setFIFOEnabled(const bool enabled);        // -
+        bool getI2CMasterModeEnabled(void);        // -
+        bool setI2CMasterModeEnabled(const bool enabled);        // -
+        bool switchSPIEnabled(const bool enabled);        // -
+        bool resetFIFO(void);        // -
+        bool resetI2CMaster(void);        // -
+        bool resetSensors(void);        // -
+        bool reset(void);        // -
+        bool getSleepEnabled(bool& out);
+        bool setSleepEnabled(bool enabled);
+        bool getWakeCycleEnabled(void);        // -
+        bool setWakeCycleEnabled(const bool enabled);        // -
+        bool getClockSource(uint8_t& out);
+        bool setClockSource(uint8_t source);
+        uint8_t getWakeFrequency(void);        // -
+        bool setWakeFrequency(const uint8_t frequency);        // -
+        uint16_t getFIFOCount(void);        // -
+        uint8_t getFIFOByte(void);        // -
+        bool setFIFOByte(const uint8_t data);        // -
 
-        uint8_t getOTPBankValid(void);
-        bool setOTPBankValid(const bool enabled);
-        int8_t getXFineGain(void);
-        bool setXFineGain(const int8_t gain);
-        int8_t getYFineGain(void);
-        bool setYFineGain(const int8_t gain);
-        int8_t getZFineGain(void);
-        bool setZFineGain(const int8_t gain);
-        bool getIntPLLReadyEnabled(void);
-        bool setIntPLLReadyEnabled(const bool enabled);
-        bool getIntDMPEnabled(void);
-        bool setIntDMPEnabled(const bool enabled);
-        bool getDMPInt5Status(void);
-        bool getDMPInt4Status(void);
-        bool getDMPInt3Status(void);
-        bool getDMPInt2Status(void);
-        bool getDMPInt1Status(void);
-        bool getDMPInt0Status(void);
-        bool getIntPLLReadyStatus(void);
-        bool getIntDMPStatus(void);
-        bool getDMPEnabled(void);
-        bool setDMPEnabled(const bool enabled);
-        bool resetDMP(void);
-        bool setMemoryBank(uint8_t bank, const bool prefetchEnabled, const bool userBank);
-        bool setMemoryStartAddress(const uint8_t address);
-        uint8_t readMemoryByte(void);
-        bool writeMemoryByte(uint8_t data);
-        void readMemoryBlock(uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address);
-        bool writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address, bool verify, bool useProgMem);
-        bool writeProgMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address, bool verify);
-        bool writeDMPConfigurationSet(const uint8_t *data, uint16_t dataSize, bool useProgMem);
-        bool writeProgDMPConfigurationSet(const uint8_t *data, const uint16_t dataSize);
-        uint8_t getDMPConfig1(void);
-        bool setDMPConfig1(uint8_t config);
-        uint8_t getDMPConfig2(void);
-        bool setDMPConfig2(uint8_t config);
 
-        uint8_t getDeviceID(void);
-        bool testConnection();
-        void selectClock(uint8_t clock_type);
+
+        uint8_t getOTPBankValid(void);        // -
+        bool setOTPBankValid(const bool enabled);        // -
+        int8_t getXFineGain(void);        // -
+        bool setXFineGain(const int8_t gain);        // -
+        int8_t getYFineGain(void);        // -
+        bool setYFineGain(const int8_t gain);        // -
+        int8_t getZFineGain(void);        // -
+        bool setZFineGain(const int8_t gain);        // -
+        bool getIntPLLReadyEnabled(void);        // -
+        bool setIntPLLReadyEnabled(const bool enabled);        // -
+        bool getIntDMPEnabled(void);        // -
+        bool setIntDMPEnabled(const bool enabled);        // -
+        bool getDMPInt5Status(void);        // -
+        bool getDMPInt4Status(void);        // -
+        bool getDMPInt3Status(void);        // -
+        bool getDMPInt2Status(void);        // -
+        bool getDMPInt1Status(void);        // -
+        bool getDMPInt0Status(void);        // -
+        bool getIntPLLReadyStatus(void);        // -
+        bool getIntDMPStatus(void);        // -
+        bool getDMPEnabled(void);        // -
+        bool setDMPEnabled(const bool enabled);        // -
+        bool resetDMP(void);        // -
+        bool setMemoryBank(uint8_t bank, const bool prefetchEnabled, const bool userBank);        // -
+        bool setMemoryStartAddress(const uint8_t address);        // -
+        uint8_t readMemoryByte(void);        // -
+        bool writeMemoryByte(uint8_t data);        // -
+        void readMemoryBlock(uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address);        // -
+        bool writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address, bool verify, bool useProgMem);        // -
+        bool writeProgMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address, bool verify);        // -
+        bool writeDMPConfigurationSet(const uint8_t *data, uint16_t dataSize, bool useProgMem);        // -
+        bool writeProgDMPConfigurationSet(const uint8_t *data, const uint16_t dataSize);        // -
+        uint8_t getDMPConfig1(void);        // -
+        bool setDMPConfig1(uint8_t config);        // -
+        uint8_t getDMPConfig2(void);        // -
+        bool setDMPConfig2(uint8_t config);        // -
+
+        uint8_t getDeviceID(void);        // -
+        bool testConnection();        // -
+        void selectClock(uint8_t clock_type);        // -
 
         //acceleration functions
-        bool getAccelXSelfTest(void);
-        bool setAccelXSelfTest(const uint8_t enabled);
-        bool getAccelYSelfTest(void);
-        bool setAccelYSelfTest(const uint8_t enabled);
-        bool getAccelZSelfTest(void);
-        bool setAccelZSelfTest(const uint8_t enabled);
-        uint8_t getFullScaleAccelRange(void);
-        bool setFullScaleAccelRange(const uint8_t range);
+        bool getAccelXSelfTest(void);        // -
+        bool setAccelXSelfTest(const uint8_t enabled);        // -
+        bool getAccelYSelfTest(void);        // -
+        bool setAccelYSelfTest(const uint8_t enabled);        // -
+        bool getAccelZSelfTest(void);        // -
+        bool setAccelZSelfTest(const uint8_t enabled);        // -
+        bool getFullScaleAccelRange(uint8_t& out);
+        bool setFullScaleAccelRange(uint8_t range);
 
-        bool getAccelFIFOEnabled(void);
-        bool setAccelFIFOEnabled(const bool enabled);
+        bool getAccelFIFOEnabled(void);        // -
+        bool setAccelFIFOEnabled(const bool enabled);        // -
 
-        int16_t getAccelerationX(void);
-        int16_t getAccelerationY(void);
-        int16_t getAccelerationZ(void);
-        void getAcceleration(int16_t* ax, int16_t* ay, int16_t* az);
+        int16_t getAccelerationX(void);        // -
+        int16_t getAccelerationY(void);        // -
+        int16_t getAccelerationZ(void);        // -
+        void getAcceleration(int16_t* ax, int16_t* ay, int16_t* az);        // -
 
-        bool resetAccelerometerPath(void);
-        uint8_t getAccelerometerPowerOnDelay(void);
-        bool setAccelerometerPowerOnDelay(const uint8_t delay);
+        bool resetAccelerometerPath(void);        // -
+        uint8_t getAccelerometerPowerOnDelay(void);        // -
+        bool setAccelerometerPowerOnDelay(const uint8_t delay);        // -
 
-        int16_t getXAccelOffset(void);
-        bool setXAccelOffset(const int16_t offset);
-        int16_t getYAccelOffset(void);
-        bool setYAccelOffset(const int16_t offset);
-        int16_t getZAccelOffset(void);
-        bool setZAccelOffset(const int16_t offset);
+        int16_t getXAccelOffset(void);        // -
+        bool setXAccelOffset(const int16_t offset);        // -
+        int16_t getYAccelOffset(void);        // -
+        bool setYAccelOffset(const int16_t offset);        // -
+        int16_t getZAccelOffset(void);        // -
+        bool setZAccelOffset(const int16_t offset);        // -
 
-        bool getStandbyXAccelEnabled(void);
-        bool setStandbyXAccelEnabled(const bool enabled);
-        bool getStandbyYAccelEnabled(void);
-        bool setStandbyYAccelEnabled(const bool enabled);
-        bool getStandbyZAccelEnabled(void);
-        bool setStandbyZAccelEnabled(const bool enabled);
+        bool getStandbyXAccelEnabled(void);        // -
+        bool setStandbyXAccelEnabled(const bool enabled);        // -
+        bool getStandbyYAccelEnabled(void);        // -
+        bool setStandbyYAccelEnabled(const bool enabled);        // -
+        bool getStandbyZAccelEnabled(void);        // -
+        bool setStandbyZAccelEnabled(const bool enabled);        // -
 
-        bool enableAccelerometerAxis(const uint8_t axis);
-        bool disableAccelerometerAxis(const uint8_t axis);
-        bool enableAccelerometer(void);
-        bool disableAccelerometer(void);
+        bool enableAccelerometerAxis(const uint8_t axis);        // -
+        bool disableAccelerometerAxis(const uint8_t axis);        // -
+        bool enableAccelerometer(void);        // -
+        bool disableAccelerometer(void);        // -
 
-        void getAccelerometerTestData(uint8_t ax, uint8_t ay, uint8_t az);
+        void getAccelerometerTestData(uint8_t ax, uint8_t ay, uint8_t az);        // -
 
-        bool accelerometerXIsEnabled(void);
-        bool accelerometerYIsEnabled(void);
-        bool accelerometerZIsEnabled(void);
+        bool accelerometerXIsEnabled(void);        // -
+        bool accelerometerYIsEnabled(void);        // -
+        bool accelerometerZIsEnabled(void);        // -
 
-        //gyroscope functions
-        uint8_t getFullScaleGyroRange(void);
-        bool setFullScaleGyroRange(const uint8_t range);
+        // Gyroscope functions
+        bool getFullScaleGyroRange(uint8_t& out);
+        bool setFullScaleGyroRange(uint8_t range);
 
-        bool getXGyroFIFOEnabled(void);
-        bool setXGyroFIFOEnabled(const bool enabled);
-        bool getYGyroFIFOEnabled(void);
-        bool setYGyroFIFOEnabled(const bool enabled);
-        bool getZGyroFIFOEnabled(void);
-        bool setZGyroFIFOEnabled(const bool enabled);
+        bool getXGyroFIFOEnabled(void);        // -
+        bool setXGyroFIFOEnabled(const bool enabled);        // -
+        bool getYGyroFIFOEnabled(void);        // -
+        bool setYGyroFIFOEnabled(const bool enabled);        // -
+        bool getZGyroFIFOEnabled(void);        // -
+        bool setZGyroFIFOEnabled(const bool enabled);        // -
 
-        bool resetGyroscopePath(void);
+        bool resetGyroscopePath(void);        // -
 
-        bool getStandbyXGyroEnabled(void);
-        bool setStandbyXGyroEnabled(const bool enabled);
-        bool getStandbyYGyroEnabled(void);
-        bool setStandbyYGyroEnabled(const bool enabled);
-        bool getStandbyZGyroEnabled(void);
-        bool setStandbyZGyroEnabled(const bool enabled);
+        bool getStandbyXGyroEnabled(void);        // -
+        bool setStandbyXGyroEnabled(const bool enabled);        // -
+        bool getStandbyYGyroEnabled(void);        // -
+        bool setStandbyYGyroEnabled(const bool enabled);        // -
+        bool getStandbyZGyroEnabled(void);        // -
+        bool setStandbyZGyroEnabled(const bool enabled);        // -
 
-        int16_t getXGyroOffsetUser(void);
-        void setXGyroOffsetUser(const int16_t offset);
-        int16_t getYGyroOffsetUser(void);
-        void setYGyroOffsetUser(const int16_t offset);
-        int16_t getZGyroOffsetUser(void);
-        void setZGyroOffsetUser(const int16_t offset);
+        int16_t getXGyroOffsetUser(void);        // -
+        void setXGyroOffsetUser(const int16_t offset);        // -
+        int16_t getYGyroOffsetUser(void);        // -
+        void setYGyroOffsetUser(const int16_t offset);        // -
+        int16_t getZGyroOffsetUser(void);        // -
+        void setZGyroOffsetUser(const int16_t offset);        // -
 
-        int16_t getXGyroOffset(void);
-        bool setXGyroOffset(const int16_t offset);
-        int16_t getYGyroOffset(void);
-        bool setYGyroOffset(const int16_t offset);
-        int16_t getZGyroOffset(void);
-        bool setZGyroOffset(const int16_t offset);
+        int16_t getXGyroOffset(void);        // -
+        bool setXGyroOffset(const int16_t offset);        // -
+        int16_t getYGyroOffset(void);        // -
+        bool setYGyroOffset(const int16_t offset);        // -
+        int16_t getZGyroOffset(void);        // -
+        bool setZGyroOffset(const int16_t offset);        // -
 
-        int16_t getRotationX(void);
-        int16_t getRotationY(void);
-        int16_t getRotationZ(void);
-        void getRotation(int16_t* gx, int16_t* gy, int16_t* gz);
-        bool enableGyroAxis(const uint8_t axis);
-        bool disableGyroAxis(const uint8_t axis);
-        bool enableGyro(void);
-        bool disableGyro(void);
+        int16_t getRotationX(void);        // -
+        int16_t getRotationY(void);        // -
+        int16_t getRotationZ(void);        // -
+        void getRotation(int16_t* gx, int16_t* gy, int16_t* gz);        // -
+        bool enableGyroAxis(const uint8_t axis);        // -
+        bool disableGyroAxis(const uint8_t axis);        // -
+        bool enableGyro(void);        // -
+        bool disableGyro(void);        // -
 
-        void getGyroTestData(uint8_t gx, uint8_t gy, uint8_t gz);
-        bool gyroXIsEnabled(void);
-        bool gyroYIsEnabled(void);
-        bool gyroZIsEnabled(void);
+        void getGyroTestData(uint8_t gx, uint8_t gy, uint8_t gz);        // -
+        bool gyroXIsEnabled(void);        // -
+        bool gyroYIsEnabled(void);        // -
+        bool gyroZIsEnabled(void);        // -
 
-        void getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);
-        void getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz);
+        void getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);        // -
+        void getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz);        // -
 
         //temperature functions
-        bool getTempFIFOEnabled(void);
-        bool setTempFIFOEnabled(const bool enabled);
+        bool getTempFIFOEnabled(void);        // -
+        bool setTempFIFOEnabled(const bool enabled);        // -
 
-        bool enableTemperature(void);
-        bool disableTemperature(void);
-        bool temperatureIsEnabled(void);
-        int16_t getTemperature(void);
-        bool resetTemperaturePath(void);
+        bool enableTemperature(void);        // -
+        bool disableTemperature(void);        // -
+        bool temperatureIsEnabled(void);        // -
+        int16_t getTemperature(void);        // -
+        bool resetTemperaturePath(void);        // -
 
     protected:
         template<typename T>
-        typename T::DATA& readRegister(T& t);
+        bool readRegister(T& t);
 
         template<typename T>
-        typename void writeRegister(const T& t);
+        bool writeRegister(T& t);
 
     private:
+        template<typename T, typename F>
+        bool updateRegister(F func);        // Captured lamdas are not functions =\
+
+        template<typename T, typename F>
+        bool parseRegister(F func);
+
         I2Cdev _i2c;
         uint8_t _mpuAddress;
         uint8_t _magAddress;
