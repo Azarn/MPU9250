@@ -48,7 +48,7 @@ struct REGISTER_DESCRIPTION {
         uint8_t Raw;
         explicit DATA(T data) : Structed(data) {};
         DATA(uint8_t value) : Raw(value) {};
-        DATA() : Data(0) {};
+        DATA() : DATA(0) {};
     };
 
     static_assert(sizeof(DATA) == sizeof(uint8_t));
@@ -74,7 +74,7 @@ struct REGISTER_DESCRIPTION<A, F, uint8_t> {
     union DATA {
         uint8_t Raw;
         DATA(uint8_t value) : Raw(value) {};
-        DATA() : Data(0) {};
+        DATA() : DATA(0) {};
     };
 
     DATA& getData() {
@@ -203,7 +203,7 @@ struct INT_PIN_CFG_DATA {
     uint8_t FSYNC_INT_MODE_EN : 1;
     uint8_t ACTL_FSYNC : 1;
     uint8_t INT_ANYRD_2CLEAR : 1;
-    uint8_t INT_ANYRD_2CLEAR : 1;
+    uint8_t LATCH_INT_EN : 1;
     uint8_t OPEN : 1;
     uint8_t ACTL : 1;
 };
@@ -455,12 +455,6 @@ using MAG_I2CDIS = REGISTER_DESCRIPTION<0x0F, IO_FLAG::RW>;
 using MAG_ASAX = REGISTER_DESCRIPTION<0x10, IO_FLAG::R>;
 using MAG_ASAY = REGISTER_DESCRIPTION<0x11, IO_FLAG::R>;
 using MAG_ASAZ = REGISTER_DESCRIPTION<0x12, IO_FLAG::R>;
-
-
-template<typename T>
-typename T::DATA& test(T& t) {
-    return t.getData();
-}
 
 
 class MPU9250 {
@@ -778,17 +772,14 @@ class MPU9250 {
         int16_t getTemperature(void);
         bool resetTemperaturePath(void);
 
+    protected:
+        template<typename T>
+        typename T::DATA& readRegister(T& t);
+
+        template<typename T>
+        typename void writeRegister(const T& t);
+
     private:
-        bool writeRegister(const uint8_t register_addr, const uint8_t value);
-        bool writeMagRegister(const uint8_t register_addr, const uint8_t value);
-        bool writeRegisters(const uint8_t msb_register, const uint8_t msb_value, const uint8_t lsb_register, const uint8_t lsb_value);
-        bool writeMaskedRegister(const uint8_t register_addr, const uint8_t mask, const uint8_t value);
-
-        uint8_t readRegister(const uint8_t register_addr);
-        uint8_t readMagRegister(const uint8_t register_addr);
-        uint16_t readRegisters(const uint8_t msb_register, const uint8_t lsb_register);
-        uint8_t readMaskedRegister(const uint8_t register_addr, const uint8_t mask);
-
         I2Cdev _i2c;
         uint8_t _mpuAddress;
         uint8_t _magAddress;
