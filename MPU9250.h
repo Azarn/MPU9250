@@ -5,346 +5,472 @@
 * Changelog:
 *     ... - ongoing development release
 
-* NOTE: THIS IS ONLY A PARIAL RELEASE. 
-* THIS DEVICE CLASS IS CURRENTLY UNDERGOING ACTIVE DEVELOPMENT AND IS MISSING MOST FEATURES. 
+* NOTE: THIS IS ONLY A PARIAL RELEASE.
+* THIS DEVICE CLASS IS CURRENTLY UNDERGOING ACTIVE DEVELOPMENT AND IS MISSING MOST FEATURES.
 * PLEASE KEEP THIS IN MIND IF YOU DECIDE TO USE THIS PARTICULAR CODE FOR ANYTHING.
 */
 
 #ifndef _MPU9250_H_
 #define _MPU9250_H_
 
-#include <avr/pgmspace.h>
+#include <stdint.h>
+#include "I2Cdev.h"
+// #include <avr/pgmspace.h>
+
+#define pgm_read_byte(p) (*(uint8_t *)(p))
+
 //MPU9250 Register map
 
-#define MPU9250_DEFAULT_ADDRESS         0xD1
-#define MPU9250_ALT_DEFAULT_ADDRESS     0xD2   
 
-#define MPU9250_SELF_TEST_X_GYRO        0x00
-#define MPU9250_SELF_TEST_Y_GYRO        0x01
-#define MPU9250_SELF_TEST_Z_GYRO        0x02
+#define MPU9250_ADDRESS_AD0_LOW         0x68    // address pin low (GND), default for InvenSense evaluation board
+#define MPU9250_ADDRESS_AD0_HIGH        0x69    // address pin high (VCC)
+#define MPU9250_DEFAULT_ADDRESS         MPU9250_ADDRESS_AD0_LOW
+#define MPU9250_MAG_ADDRESS             0x0C
 
-#define MPU9250_SELF_TEST_X_ACCEL       0x0D
-#define MPU9250_SELF_TEST_Y_ACCEL       0x0E
-#define MPU9250_SELF_TEST_Z_ACCEL       0x0F
-
-#define MPU9250_XG_OFFSET_H             0x13
-#define MPU9250_XG_OFFSET_L             0x14
-#define MPU9250_YG_OFFSET_H             0x15
-#define MPU9250_YG_OFFSET_L             0x16
-#define MPU9250_ZG_OFFSET_H             0x17
-#define MPU9250_ZG_OFFSET_L             0x18
-#define MPU9250_SMPLRT_DIV              0x19
-#define MPU9250_CONFIG                  0x1A
-#define MPU9250_GYRO_CONFIG             0x1B
-#define MPU9250_ACCEL_CONFIG            0x1C
-#define MPU9250_ACCEL_CONFIG2           0x1D
-#define MPU9250_LP_ACCEL_ODR            0x1E
-#define MPU9250_WOM_THR                 0x1F
-
-#define MPU9250_FIFO_EN                 0x23
-#define MPU9250_I2C_MST_CTRL            0x24
-#define MPU9250_I2C_SLV0_ADDR           0x25
-#define MPU9250_I2C_SLV0_REG            0x26
-#define MPU9250_I2C_SLV0_CTRL           0x27
-#define MPU9250_I2C_SLV1_ADDR           0x28
-#define MPU9250_I2C_SLV1_REG            0x29
-#define MPU9250_I2C_SLV1_CTRL           0x2A
-#define MPU9250_I2C_SLV2_ADDR           0x2B
-#define MPU9250_I2C_SLV2_REG            0x2C
-#define MPU9250_I2C_SLV2_CTRL           0x2D
-#define MPU9250_I2C_SLV3_ADDR           0x2E
-#define MPU9250_I2C_SLV3_REG            0x2F
-#define MPU9250_I2C_SLV3_CTRL           0x30
-#define MPU9250_I2C_SLV4_ADDR           0x31
-#define MPU9250_I2C_SLV4_REG            0x32
-#define MPU9250_I2C_SLV4_DO             0x33
-#define MPU9250_I2C_SLV4_CTRL           0x34
-#define MPU9250_I2C_SLV4_DI             0x35
-#define MPU9250_I2C_MST_STATUS          0x36
-#define MPU9250_INT_PIN_CFG             0x37
-#define MPU9250_INT_ENABLE              0x38
-
-#define MPU9250_INT_STATUS              0x3A
-#define MPU9250_ACCEL_XOUT_H            0x3B
-#define MPU9250_ACCEL_XOUT_L            0x3C
-#define MPU9250_ACCEL_YOUT_H            0x3D
-#define MPU9250_ACCEL_YOUT_L            0x3E
-#define MPU9250_ACCEL_ZOUT_H            0x3F
-#define MPU9250_ACCEL_ZOUT_L            0x40
-#define MPU9250_TEMP_OUT_H              0x41
-#define MPU9250_TEMP_OUT_L              0x42
-#define MPU9250_GYRO_XOUT_H             0x43
-#define MPU9250_GYRO_XOUT_L             0x44
-#define MPU9250_GYRO_YOUT_H             0x45
-#define MPU9250_GYRO_YOUT_L             0x46
-#define MPU9250_GYRO_ZOUT_H             0x47
-#define MPU9250_GYRO_ZOUT_L             0x48
-#define MPU9250_EXT_SENS_DATA_00        0x49
-#define MPU9250_EXT_SENS_DATA_01        0x4A
-#define MPU9250_EXT_SENS_DATA_02        0x4B
-#define MPU9250_EXT_SENS_DATA_03        0x4C
-#define MPU9250_EXT_SENS_DATA_04        0x4D
-#define MPU9250_EXT_SENS_DATA_05        0x4E
-#define MPU9250_EXT_SENS_DATA_06        0x4F
-#define MPU9250_EXT_SENS_DATA_07        0x50
-#define MPU9250_EXT_SENS_DATA_08        0x51
-#define MPU9250_EXT_SENS_DATA_09        0x52
-#define MPU9250_EXT_SENS_DATA_10        0x53
-#define MPU9250_EXT_SENS_DATA_11        0x54
-#define MPU9250_EXT_SENS_DATA_12        0x55
-#define MPU9250_EXT_SENS_DATA_13        0x56
-#define MPU9250_EXT_SENS_DATA_14        0x57
-#define MPU9250_EXT_SENS_DATA_15        0x58
-#define MPU9250_EXT_SENS_DATA_16        0x59
-#define MPU9250_EXT_SENS_DATA_17        0x5A
-#define MPU9250_EXT_SENS_DATA_18        0x5B
-#define MPU9250_EXT_SENS_DATA_19        0x5C
-#define MPU9250_EXT_SENS_DATA_20        0x5D
-#define MPU9250_EXT_SENS_DATA_21        0x5E
-#define MPU9250_EXT_SENS_DATA_22        0x5F
-#define MPU9250_EXT_SENS_DATA_23        0x60
-
-#define MPU9250_I2C_SLV0_DO             0x63
-#define MPU9250_I2C_SLV1_DO             0x64
-#define MPU9250_I2C_SLV2_DO             0x65
-#define MPU9250_I2C_SLV3_DO             0x66
-#define MPU9250_I2C_MST_DELAY_CTRL      0x67
-#define MPU9250_SIGNAL_PATH_RESET       0x68
-#define MPU9250_MOT_DETECT_CTRL         0x69
-#define MPU9250_USER_CTRL               0x6A
-#define MPU9250_PWR_MGMT_1              0x6B
-#define MPU9250_PWR_MGMT_2              0x6C
-
-#define MPU9250_FIFO_COUNTH             0x72
-#define MPU9250_FIFO_COUNTL             0x73
-#define MPU9250_FIFO_R_W                0x74
-#define MPU9250_WHO_AM_I                0x75
-#define MPU9250_XA_OFFSET_H             0x77
-#define MPU9250_XA_OFFSET_L             0x78
-
-#define MPU9250_YA_OFFSET_H             0x7A
-#define MPU9250_YA_OFFSET_L             0x7B
-
-#define MPU9250_ZA_OFFSET_H             0x7D
-#define MPU9250_ZA_OFFSET_L             0x7E
-
-//reset values
+// Reset values
 #define WHOAMI_RESET_VAL                0x71
 #define POWER_MANAGMENT_1_RESET_VAL     0x01
 #define DEFAULT_RESET_VALUE             0x00
+#define WHOAMI_DEFAULT_VAL              0x71
+#define MAG_WIA_DEFAULT_VAL             0x48
 
-#define WHOAMI_DEFAULT_VAL              0x68
 
-//CONFIG register masks
-#define MPU9250_FIFO_MODE_MASK          0x40
-#define MPU9250_EXT_SYNC_SET_MASK       0x38
-#define MPU9250_DLPF_CFG_MASK           0x07
+enum IO_FLAG {
+    R,
+    W,
+    RW
+};
 
-//GYRO_CONFIG register masks
-#define MPU9250_XGYRO_CTEN_MASK         0x80
-#define MPU9250_YGYRO_CTEN_MASK         0x40
-#define MPU9250_ZGYRO_CTEN_MASK         0x20
-#define MPU9250_GYRO_FS_SEL_MASK        0x18
-#define MPU9250_FCHOICE_B_MASK          0x03
+template<uint8_t A, IO_FLAG F, typename T=uint8_t>
+struct REGISTER_DESCRIPTION {
+    union DATA {
+        T Structed;
+        uint8_t Raw;
+        explicit DATA(T data) : Structed(data) {};
+        DATA(uint8_t value) : Raw(value) {};
+        DATA() : Data(0) {};
+    };
 
-#define MPU9250_GYRO_FULL_SCALE_250DPS  0
-#define MPU9250_GYRO_FULL_SCALE_500DPS  1
-#define MPU9250_GYRO_FULL_SCALE_1000DPS 2
-#define MPU9250_GYRO_FULL_SCALE_2000DPS 3
+    static_assert(sizeof(DATA) == sizeof(uint8_t));
 
-//ACCEL_CONFIG register masks
-#define MPU9250_AX_ST_EN_MASK           0x80
-#define MPU9250_AY_ST_EN_MASK           0x40
-#define MPU9250_AZ_ST_EN_MASK           0x20
-#define MPU9250_ACCEL_FS_SEL_MASK       0x18
+    DATA& getData() {
+        return Data;
+    }
 
-#define MPU9250_FULL_SCALE_2G           0
-#define MPU9250_FULL_SCALE_4G           1
-#define MPU9250_FULL_SCALE_8G           2
-#define MPU9250_FULL_SCALE_16G          3
+    void setData(const DATA data) {
+        Data = data;
+    }
 
-//ACCEL_CONFIG_2 register masks
-#define MPU9250_ACCEL_FCHOICE_B_MASK    0xC0
-#define MPU9250_A_DLPF_CFG_MASK         0x03
+    static const uint8_t Address = A;
+    static const IO_FLAG IOFlag = F;
 
-//LP_ACCEL_ODR register masks
-#define MPU9250_LPOSC_CLKSEL_MASK       0x0F
+private:
+    DATA Data;
+};
 
-//FIFO_EN register masks
-#define MPU9250_TEMP_FIFO_EN_MASK       0x80
-#define MPU9250_GYRO_XOUT_MASK          0x40
-#define MPU9250_GYRO_YOUT_MASK          0x20
-#define MPU9250_GYRO_ZOUT_MASK          0x10
-#define MPU9250_ACCEL_MASK              0x08
-#define MPU9250_SLV2_MASK               0x04
-#define MPU9250_SLV1_MASK               0x02
-#define MPU9250_SLV0_MASK               0x01
+// TODO: Can we fix this "copy-paste"?
+template<uint8_t A, IO_FLAG F>
+struct REGISTER_DESCRIPTION<A, F, uint8_t> {
+    union DATA {
+        uint8_t Raw;
+        DATA(uint8_t value) : Raw(value) {};
+        DATA() : Data(0) {};
+    };
 
-//I2C_MST_CTRL register masks
-#define MPU9250_MULT_MST_EN_MASK        0x80
-#define MPU9250_WAIT_FOR_ES_MASK        0x40
-#define MPU9250_SLV_3_FIFO_EN_MASK      0x20
-#define MPU9250_I2C_MST_P_NSR_MASK      0x10
-#define MPU9250_I2C_MST_CLK_MASK        0x0F
+    DATA& getData() {
+        return Data;
+    }
 
-//I2C_SLV0_ADDR register masks
-#define MPU9250_I2C_SLV0_RNW_MASK       0x80
-#define MPU9250_I2C_ID_0_MASK           0x7F
+    void setData(const DATA data) {
+        Data = data;
+    }
 
-//I2C_SLV0_CTRL register masks
-#define MPU9250_I2C_SLV0_EN_MASK        0x80
-#define MPU9250_I2C_SLV0_BYTE_SW_MASK   0x40
-#define MPU9250_I2C_SLV0_REG_DIS_MASK   0x20
-#define MPU9250_I2C_SLV0_GRP_MASK       0x10
-#define MPU9250_I2C_SLV0_LENG_MASK      0x0F
+    static const uint8_t Address = A;
+    static const IO_FLAG IOFlag = F;
 
-//I2C_SLV1_ADDR register masks
-#define MPU9250_I2C_SLV1_RNW_MASK       0x80
-#define MPU9250_I2C_ID_1_MASK           0x7F
+private:
+    DATA Data;
+};
 
-//I2C_SLV1_CTRL register masks
-#define MPU9250_I2C_SLV1_EN_MASK        0x80
-#define MPU9250_I2C_SLV1_BYTE_SW_MASK   0x40
-#define MPU9250_I2C_SLV1_REG_DIS_MASK   0x20
-#define MPU9250_I2C_SLV1_GRP_MASK       0x10
-#define MPU9250_I2C_SLV1_LENG_MASK      0x0F
 
-//I2C_SLV2_ADDR register masks
-#define MPU9250_I2C_SLV2_RNW_MASK       0x80
-#define MPU9250_I2C_ID_2_MASK           0x7F
+struct CONFIG_DATA {
+    uint8_t DLPF_CFG: 3;        // 0 bit
+    uint8_t EXT_SYNC_SET: 3;
+    uint8_t FIFO_MODE: 1;       // 6 bit
+    uint8_t : 1;                // 7 bit, Reserved
 
-//I2C_SLV2_CTRL register masks
-#define MPU9250_I2C_SLV2_EN_MASK        0x80
-#define MPU9250_I2C_SLV2_BYTE_SW_MASK   0x40
-#define MPU9250_I2C_SLV2_REG_DIS_MASK   0x20
-#define MPU9250_I2C_SLV2_GRP_MASK       0x10
-#define MPU9250_I2C_SLV2_LENG_MASK      0x0F
+    static const uint8_t EXT_SYNC_DISABLED      = 0x0;
+    static const uint8_t EXT_SYNC_TEMP_OUT_L    = 0x1;
+    static const uint8_t EXT_SYNC_GYRO_XOUT_L   = 0x2;
+    static const uint8_t EXT_SYNC_GYRO_YOUT_L   = 0x3;
+    static const uint8_t EXT_SYNC_GYRO_ZOUT_L   = 0x4;
+    static const uint8_t EXT_SYNC_ACCEL_XOUT_L  = 0x5;
+    static const uint8_t EXT_SYNC_ACCEL_YOUT_L  = 0x6;
+    static const uint8_t EXT_SYNC_ACCEL_ZOUT_L  = 0x7;
+};
 
-//I2C_SLV3_ADDR register masks
-#define MPU9250_I2C_SLV3_RNW_MASK       0x80
-#define MPU9250_I2C_ID_3_MASK           0x7F
+struct GYRO_CONFIG_DATA {
+    uint8_t FCHOICE_B: 2;
+    uint8_t : 1;
+    uint8_t GYRO_FS_SEL : 2;
+    uint8_t ZGYRO_CTEN : 1;
+    uint8_t YGYRO_CTEN : 1;
+    uint8_t XGYRO_CTEN : 1;
 
-//I2C_SLV3_CTRL register masks
-#define MPU9250_I2C_SLV3_EN_MASK        0x80
-#define MPU9250_I2C_SLV3_BYTE_SW_MASK   0x40
-#define MPU9250_I2C_SLV3_REG_DIS_MASK   0x20
-#define MPU9250_I2C_SLV3_GRP_MASK       0x10
-#define MPU9250_I2C_SLV3_LENG_MASK      0x0F
+    static const uint8_t GYRO_FULL_SCALE_250DPS     = 0x0;
+    static const uint8_t GYRO_FULL_SCALE_500DPS     = 0x1;
+    static const uint8_t GYRO_FULL_SCALE_1000DPS    = 0x2;
+    static const uint8_t GYRO_FULL_SCALE_2000DPS    = 0x3;
+};
 
-//I2C_SLV4_ADDR register masks
-#define MPU9250_I2C_SLV4_RNW_MASK       0x80
-#define MPU9250_I2C_ID_4_MASK           0x7F
+struct ACCEL_CONFIG_DATA {
+    uint8_t : 3;
+    uint8_t ACCEL_FS_SEL : 2;
+    uint8_t AZ_ST_EN : 1;
+    uint8_t AY_ST_EN : 1;
+    uint8_t AX_ST_EN : 1;
 
-//I2C_SLV4_CTRL register masks
-#define MPU9250_I2C_SLV4_EN_MASK        0x80
-#define MPU9250_SLV4_DONE_INT_EN_MASK   0x40
-#define MPU9250_I2C_SLV4_REG_DIS_MASK   0x20
-#define MPU9250_I2C_MST_DLY_MASK        0x1F
+    static const uint8_t FULL_SCALE_2G  = 0x0;
+    static const uint8_t FULL_SCALE_4G  = 0x1;
+    static const uint8_t FULL_SCALE_8G  = 0x2;
+    static const uint8_t FULL_SCALE_16G = 0x3;
+};
 
-//I2C_MST_STATUS register masks
-#define MPU9250_PASS_THROUGH_MASK       0x80
-#define MPU9250_I2C_SLV4_DONE_MASK      0x40
-#define MPU9250_I2C_LOST_ARB_MASK       0x20
-#define MPU9250_I2C_SLV4_NACK_MASK      0x10
-#define MPU9250_I2C_SLV3_NACK_MASK      0x08
-#define MPU9250_I2C_SLV2_NACK_MASK      0x04
-#define MPU9250_I2C_SLV1_NACK_MASK      0x02
-#define MPU9250_I2C_SLV0_NACK_MASK      0x01
+struct ACCEL_CONFIG2_DATA {
+    uint8_t A_DLPFCFG : 3;
+    uint8_t ACCEL_FCHOICE_B : 1;
+    uint8_t : 4;
+};
 
-//INT_PIN_CFG register masks
-#define MPU9250_ACTL_MASK               0x80
-#define MPU9250_OPEN_MASK               0x40
-#define MPU9250_LATCH_INT_EN_MASK       0x20
-#define MPU9250_INT_ANYRD_2CLEAR_MASK   0x10
-#define MPU9250_ACTL_FSYNC_MASK         0x08
-#define MPU9250_FSYNC_INT_MODE_EN_MASK  0x04
-#define MPU9250_BYPASS_EN_MASK          0x02
+struct LP_ACCEL_ODR_DATA {
+    uint8_t LPOSC_CLKSEL : 4;
+    uint8_t : 4;
+};
 
-//INT_ENABLE register masks
-#define MPU9250_WOM_EN_MASK             0x40
-#define MPU9250_FIFO_OFLOW_EN_MASK      0x10
-#define MPU9250_FSYNC_INT_EN_MASK       0x08
-#define MPU9250_RAW_RDY_EN_MASK         0x01
+struct FIFO_EN_DATA {
+    uint8_t SLV0 : 1;
+    uint8_t SLV1 : 1;
+    uint8_t SLV2 : 1;
+    uint8_t ACCEL : 1;
+    uint8_t GYRO_ZOUT : 1;
+    uint8_t GYRO_YOUT : 1;
+    uint8_t GYRO_XOUT : 1;
+    uint8_t TEMP_FIFO_EN : 1;
+};
 
-//INT_STATUS register masks
-#define MPU9250_WOM_INT_MASK            0x40
-#define MPU9250_FIFO_OFLOW_INT_MASK     0x10
-#define MPU9250_FSYNC_INT_MASK          0x08
-#define MPU9250_RAW_DATA_RDY_INT_MASK   0x01
+struct I2C_MST_CTRL_DATA {
+    uint8_t I2C_MST_CLK : 4;
+    uint8_t I2C_MST_P_NSR : 1;
+    uint8_t SLV_3_FIFO_EN : 1;
+    uint8_t WAIT_FOR_ES : 1;
+    uint8_t MULT_MST_EN : 1;
+};
 
-//I2C_MST_DELAY_CTRL register masks
-#define MPU9250_DELAY_ES_SHADOW_MASK    0x80
-#define MPU9250_I2C_SLV4_DLY_EN_MASK    0x10
-#define MPU9250_I2C_SLV3_DLY_EN_MASK    0x08
-#define MPU9250_I2C_SLV2_DLY_EN_MASK    0x04
-#define MPU9250_I2C_SLV1_DLY_EN_MASK    0x02
-#define MPU9250_I2C_SLV0_DLY_EN_MASK    0x01
+struct I2C_SLV_ADDR_DATA {
+    uint8_t I2C_ID : 7;
+    uint8_t I2C_SLV_RNW : 1;
+};
 
-//SIGNAL_PATH_RESET register masks
-#define MPU9250_GYRO_RST_MASK           0x04
-#define MPU9250_ACCEL_RST_MASK          0x02
-#define MPU9250_TEMP_RST_MASK           0x01
+struct I2C_SLV_CTRL_DATA {
+    uint8_t I2C_SLV_LENG : 4;
+    uint8_t I2C_SLV_GRP : 1;
+    uint8_t I2C_SLV_REG_DIS : 1;
+    uint8_t I2C_SLV_BYTE_SW : 1;
+    uint8_t I2C_SLV_EN : 1;
+};
 
-//MOT_DETECT_CTRL register masks
-#define MPU9250_ACCEL_INTEL_EN_MASK     0x80
-#define MPU9250_ACCEL_INTEL_MODE_MASK   0x40
+struct I2C_SLV4_CTRL_DATA {
+    uint8_t I2C_MST_DLY : 5;
+    uint8_t I2C_SLV4_REG_DIS : 1;
+    uint8_t SLV4_DONE_INT_EN : 1;
+    uint8_t I2C_SLV4_EN : 1;
+};
 
-//USER_CTRL register masks
-#define MPU9250_FIFO_EN_MASK            0x40
-#define MPU9250_I2C_MST_EN_MASK         0x20
-#define MPU9250_I2C_IF_DIS_MASK         0x10
-#define MPU9250_FIFO_RST_MASK           0x04
-#define MPU9250_I2C_MST_RST_MASK        0x02
-#define MPU9250_SIG_COND_RST_MASK       0x01
+struct I2C_MST_STATUS_DATA {
+    uint8_t I2C_SLV0_NACK : 1;
+    uint8_t I2C_SLV1_NACK : 1;
+    uint8_t I2C_SLV2_NACK : 1;
+    uint8_t I2C_SLV3_NACK : 1;
+    uint8_t I2C_SLV4_NACK : 1;
+    uint8_t I2C_LOST_ARB : 1;
+    uint8_t I2C_SLV4_DONE : 1;
+    uint8_t PASS_THROUGH : 1;
+};
 
-//PWR_MGMT_1 register masks
-#define MPU9250_H_RESET_MASK            0x80
-#define MPU9250_SLEEP_MASK              0x40
-#define MPU9250_CYCLE_MASK              0x20
-#define MPU9250_GYRO_STANDBY_CYCLE_MASK 0x10
-#define MPU9250_PD_PTAT_MASK            0x08
-#define MPU9250_CLKSEL_MASK             0x07
+struct INT_PIN_CFG_DATA {
+    uint8_t : 1;
+    uint8_t BYPASS_EN : 1;
+    uint8_t FSYNC_INT_MODE_EN : 1;
+    uint8_t ACTL_FSYNC : 1;
+    uint8_t INT_ANYRD_2CLEAR : 1;
+    uint8_t INT_ANYRD_2CLEAR : 1;
+    uint8_t OPEN : 1;
+    uint8_t ACTL : 1;
+};
 
-//PWR_MGMT_2 register masks
-#define MPU9250_DISABLE_XA_MASK         0x20
-#define MPU9250_DISABLE_YA_MASK         0x10
-#define MPU9250_DISABLE_ZA_MASK         0x08
-#define MPU9250_DISABLE_XG_MASK         0x04
-#define MPU9250_DISABLE_YG_MASK         0x02
-#define MPU9250_DISABLE_ZG_MASK         0x01
+struct INT_ENABLE_DATA {
+    uint8_t RAW_RDY_EN : 1;
+    uint8_t : 2;
+    uint8_t FSYNC_INT_EN : 1;
+    uint8_t FIFO_OVERFLOW_EN : 1;
+    uint8_t : 1;
+    uint8_t WOM_EN : 1;
+    uint8_t : 1;
+};
 
-#define MPU9250_DISABLE_XYZA_MASK       0x38
-#define MPU9250_DISABLE_XYZG_MASK       0x07
+struct INT_STATUS_DATA {
+    uint8_t RAW_DATA_RDY_INT : 1;
+    uint8_t : 2;
+    uint8_t FSYNC_INT : 1;
+    uint8_t FIFO_OVERFLOW_INT : 1;
+    uint8_t : 1;
+    uint8_t WOM_INT : 1;
+    uint8_t : 1;
+};
 
-//Magnetometer register maps
-#define MPU9250_MAG_ADDRESS             0x0C
+struct I2C_MST_DELAY_CTRL_DATA {
+    uint8_t I2C_SLV0_DLY_EN : 1;
+    uint8_t I2C_SLV1_DLY_EN : 1;
+    uint8_t I2C_SLV2_DLY_EN : 1;
+    uint8_t I2C_SLV3_DLY_EN : 1;
+    uint8_t I2C_SLV4_DLY_EN : 1;
+    uint8_t : 2;
+    uint8_t DELAY_ES_SHADOW : 1;
+};
 
-#define MPU9250_MAG_WIA                 0x00
-#define MPU9250_MAG_INFO                0x01
-#define MPU9250_MAG_ST1                 0x02
-#define MPU9250_MAG_XOUT_L              0x03
-#define MPU9250_MAG_XOUT_H              0x04
-#define MPU9250_MAG_YOUT_L              0x05
-#define MPU9250_MAG_YOUT_H              0x06
-#define MPU9250_MAG_ZOUT_L              0x07
-#define MPU9250_MAG_ZOUT_H              0x08
-#define MPU9250_MAG_ST2                 0x09
-#define MPU9250_MAG_CNTL                0x0A
-#define MPU9250_MAG_RSV                 0x0B //reserved mystery meat
-#define MPU9250_MAG_ASTC                0x0C
-#define MPU9250_MAG_TS1                 0x0D
-#define MPU9250_MAG_TS2                 0x0E
-#define MPU9250_MAG_I2CDIS              0x0F
-#define MPU9250_MAG_ASAX                0x10
-#define MPU9250_MAG_ASAY                0x11
-#define MPU9250_MAG_ASAZ                0x12
+struct SIGNAL_PATH_RESET_DATA {
+    uint8_t TEMP_RST : 1;
+    uint8_t ACCEL_RST : 1;
+    uint8_t GYRO_RST : 1;
+    uint8_t : 5;
+};
 
-//Magnetometer register masks
-#define MPU9250_WIA_MASK 0x48
- 
+struct ACCEL_INTEL_CTRL_DATA {
+    uint8_t : 6;
+    uint8_t ACCEL_INTEL_MODE : 1;
+    uint8_t ACCEL_INTEL_EN : 1;
+};
+
+struct USER_CTRL_DATA {
+    uint8_t SIG_COND_RST : 1;
+    uint8_t I2C_MST_RST : 1;
+    uint8_t FIFO_RST : 1;
+    uint8_t : 1;
+    uint8_t I2C_IF_DIS : 1;
+    uint8_t I2C_MST_EN : 1;
+    uint8_t FIFO_EN : 1;
+    uint8_t : 1;
+};
+
+struct PWR_MGMT1_DATA {
+    uint8_t CLKSEL : 3;
+    uint8_t PD_PTAT : 1;
+    uint8_t GYRO_STANDBY : 1;
+    uint8_t CYCLE : 1;
+    uint8_t SLEEP : 1;
+    uint8_t H_RESET : 1;
+
+    static const uint8_t CLKSEL_INTERNAL    = 0x0;
+    static const uint8_t CLKSEL_AUTO_PLL    = 0x01;
+    static const uint8_t CLKSEL_RESET       = 0x7;
+};
+
+struct PWR_MGMT2_DATA {
+    uint8_t DISABLE_ZG : 1;
+    uint8_t DISABLE_YG : 1;
+    uint8_t DISABLE_XG : 1;
+    uint8_t DISABLE_ZA : 1;
+    uint8_t DISABLE_YA : 1;
+    uint8_t DISABLE_XA : 1;
+    uint8_t : 2;
+};
+
+struct FIFO_COUNTH_DATA {
+    uint8_t FIFO_CNT : 5;
+    uint8_t : 3;
+};
+
+struct A_OFFS_L_DATA {
+    uint8_t : 1;
+    uint8_t A_OFFS : 7;
+};
+
+struct MAG_ST1_DATA {
+    uint8_t DRDY : 1;
+    uint8_t DOR : 1;
+    uint8_t : 6;
+};
+
+struct MAG_ST2_DATA {
+    uint8_t : 3;
+    uint8_t HOFL : 1;
+    uint8_t BITM : 1;
+    uint8_t : 3;
+};
+
+struct MAG_CNTL1_DATA {
+    uint8_t MODE : 4;
+    uint8_t BIT : 1;
+    uint8_t : 3;
+
+    static const uint8_t MODE_POWERDOWN = 0x0;
+    static const uint8_t MODE_SINGLE_MEASURE = 0x1;
+    static const uint8_t MODE_CONTINIOUS_MEASURE_1 = 0x2;
+    static const uint8_t MODE_EXTERNAL_MEASURE = 0x4;
+    static const uint8_t MODE_CONTINIOUS_MEASURE_2 = 0x6;
+    static const uint8_t MODE_SELF_TEST = 0x8;
+    static const uint8_t MODE_FUSE_ROM = 0xF;
+    static const uint8_t BIT_14BIT = 0x0;
+    static const uint8_t BIT_16BIT = 0x1;
+};
+
+struct MAG_CNTL2_DATA {
+    uint8_t SRST : 1;
+    uint8_t : 7;
+};
+
+struct MAG_ASTC_DATA {
+    uint8_t : 6;
+    uint8_t SELF : 1;
+    uint8_t : 1;
+};
+
+using SELF_TEST_X_GYRO = REGISTER_DESCRIPTION<0x00, IO_FLAG::RW>;
+using SELF_TEST_Y_GYRO = REGISTER_DESCRIPTION<0x01, IO_FLAG::RW>;
+using SELF_TEST_Z_GYRO = REGISTER_DESCRIPTION<0x02, IO_FLAG::RW>;
+using SELF_TEST_X_ACCEL = REGISTER_DESCRIPTION<0x0D, IO_FLAG::RW>;
+using SELF_TEST_Y_ACCEL = REGISTER_DESCRIPTION<0x0E, IO_FLAG::RW>;
+using SELF_TEST_Z_ACCEL = REGISTER_DESCRIPTION<0x0F, IO_FLAG::RW>;
+using XG_OFFSET_H = REGISTER_DESCRIPTION<0x13, IO_FLAG::RW>;
+using XG_OFFSET_L = REGISTER_DESCRIPTION<0x14, IO_FLAG::RW>;
+using YG_OFFSET_H = REGISTER_DESCRIPTION<0x15, IO_FLAG::RW>;
+using YG_OFFSET_L = REGISTER_DESCRIPTION<0x16, IO_FLAG::RW>;
+using ZG_OFFSET_H = REGISTER_DESCRIPTION<0x17, IO_FLAG::RW>;
+using ZG_OFFSET_L = REGISTER_DESCRIPTION<0x18, IO_FLAG::RW>;
+using SMPLRT_DIV = REGISTER_DESCRIPTION<0x19, IO_FLAG::RW>;
+using CONFIG = REGISTER_DESCRIPTION<0x1A, IO_FLAG::RW, CONFIG_DATA>;
+using GYRO_CONFIG = REGISTER_DESCRIPTION<0x1B, IO_FLAG::RW, GYRO_CONFIG_DATA>;
+using ACCEL_CONFIG = REGISTER_DESCRIPTION<0x1C, IO_FLAG::RW, ACCEL_CONFIG_DATA>;
+using ACCEL_CONFIG2 = REGISTER_DESCRIPTION<0x1D, IO_FLAG::RW, ACCEL_CONFIG2_DATA>;
+using LP_ACCEL_ODR = REGISTER_DESCRIPTION<0x1E, IO_FLAG::RW, LP_ACCEL_ODR_DATA>;
+using WOM_THR = REGISTER_DESCRIPTION<0x1F, IO_FLAG::RW>;
+using FIFO_EN = REGISTER_DESCRIPTION<0x23, IO_FLAG::RW, FIFO_EN_DATA>;
+using I2C_MST_CTRL = REGISTER_DESCRIPTION<0x24, IO_FLAG::RW, I2C_MST_CTRL_DATA>;
+using I2C_SLV0_ADDR = REGISTER_DESCRIPTION<0x25, IO_FLAG::RW, I2C_SLV_ADDR_DATA>;
+using I2C_SLV0_REG = REGISTER_DESCRIPTION<0x26, IO_FLAG::RW>;
+using I2C_SLV0_CTRL = REGISTER_DESCRIPTION<0x27, IO_FLAG::RW, I2C_SLV_CTRL_DATA>;
+using I2C_SLV1_ADDR = REGISTER_DESCRIPTION<0x28, IO_FLAG::RW, I2C_SLV_ADDR_DATA>;
+using I2C_SLV1_REG = REGISTER_DESCRIPTION<0x29, IO_FLAG::RW>;
+using I2C_SLV1_CTRL = REGISTER_DESCRIPTION<0x2A, IO_FLAG::RW, I2C_SLV_CTRL_DATA>;
+using I2C_SLV2_ADDR = REGISTER_DESCRIPTION<0x2B, IO_FLAG::RW, I2C_SLV_ADDR_DATA>;
+using I2C_SLV2_REG = REGISTER_DESCRIPTION<0x2C, IO_FLAG::RW>;
+using I2C_SLV2_CTRL = REGISTER_DESCRIPTION<0x2D, IO_FLAG::RW, I2C_SLV_CTRL_DATA>;
+using I2C_SLV3_ADDR = REGISTER_DESCRIPTION<0x2E, IO_FLAG::RW, I2C_SLV_ADDR_DATA>;
+using I2C_SLV3_REG = REGISTER_DESCRIPTION<0x2F, IO_FLAG::RW>;
+using I2C_SLV3_CTRL = REGISTER_DESCRIPTION<0x30, IO_FLAG::RW, I2C_SLV_CTRL_DATA>;
+using I2C_SLV4_ADDR = REGISTER_DESCRIPTION<0x31, IO_FLAG::RW, I2C_SLV_ADDR_DATA>;
+using I2C_SLV4_REG = REGISTER_DESCRIPTION<0x32, IO_FLAG::RW>;
+using I2C_SLV4_DO = REGISTER_DESCRIPTION<0x33, IO_FLAG::RW>;
+using I2C_SLV4_CTRL = REGISTER_DESCRIPTION<0x34, IO_FLAG::RW, I2C_SLV4_CTRL_DATA>;
+using I2C_SLV4_DI = REGISTER_DESCRIPTION<0x35, IO_FLAG::R>;
+using I2C_MST_STATUS = REGISTER_DESCRIPTION<0x36, IO_FLAG::R, I2C_MST_STATUS_DATA>;
+using INT_PIN_CFG = REGISTER_DESCRIPTION<0x37, IO_FLAG::RW, INT_PIN_CFG_DATA>;
+using INT_ENABLE = REGISTER_DESCRIPTION<0x38, IO_FLAG::RW, INT_ENABLE_DATA>;
+using INT_STATUS = REGISTER_DESCRIPTION<0x3A, IO_FLAG::R, INT_STATUS_DATA>;
+using ACCEL_XOUT_H = REGISTER_DESCRIPTION<0x3B, IO_FLAG::R>;
+using ACCEL_XOUT_L = REGISTER_DESCRIPTION<0x3C, IO_FLAG::R>;
+using ACCEL_YOUT_H = REGISTER_DESCRIPTION<0x3D, IO_FLAG::R>;
+using ACCEL_YOUT_L = REGISTER_DESCRIPTION<0x3E, IO_FLAG::R>;
+using ACCEL_ZOUT_H = REGISTER_DESCRIPTION<0x3F, IO_FLAG::R>;
+using ACCEL_ZOUT_L = REGISTER_DESCRIPTION<0x40, IO_FLAG::R>;
+using TEMP_OUT_H = REGISTER_DESCRIPTION<0x41, IO_FLAG::R>;
+using TEMP_OUT_L = REGISTER_DESCRIPTION<0x42, IO_FLAG::R>;
+using GYRO_XOUT_H = REGISTER_DESCRIPTION<0x43, IO_FLAG::R>;
+using GYRO_XOUT_L = REGISTER_DESCRIPTION<0x44, IO_FLAG::R>;
+using GYRO_YOUT_H = REGISTER_DESCRIPTION<0x45, IO_FLAG::R>;
+using GYRO_YOUT_L = REGISTER_DESCRIPTION<0x46, IO_FLAG::R>;
+using GYRO_ZOUT_H = REGISTER_DESCRIPTION<0x47, IO_FLAG::R>;
+using GYRO_ZOUT_L = REGISTER_DESCRIPTION<0x48, IO_FLAG::R>;
+using EXT_SENS_DATA_00 = REGISTER_DESCRIPTION<0x49, IO_FLAG::R>;
+using EXT_SENS_DATA_01 = REGISTER_DESCRIPTION<0x4A, IO_FLAG::R>;
+using EXT_SENS_DATA_02 = REGISTER_DESCRIPTION<0x4B, IO_FLAG::R>;
+using EXT_SENS_DATA_03 = REGISTER_DESCRIPTION<0x4C, IO_FLAG::R>;
+using EXT_SENS_DATA_04 = REGISTER_DESCRIPTION<0x4D, IO_FLAG::R>;
+using EXT_SENS_DATA_05 = REGISTER_DESCRIPTION<0x4E, IO_FLAG::R>;
+using EXT_SENS_DATA_06 = REGISTER_DESCRIPTION<0x4F, IO_FLAG::R>;
+using EXT_SENS_DATA_07 = REGISTER_DESCRIPTION<0x50, IO_FLAG::R>;
+using EXT_SENS_DATA_08 = REGISTER_DESCRIPTION<0x51, IO_FLAG::R>;
+using EXT_SENS_DATA_09 = REGISTER_DESCRIPTION<0x52, IO_FLAG::R>;
+using EXT_SENS_DATA_10 = REGISTER_DESCRIPTION<0x53, IO_FLAG::R>;
+using EXT_SENS_DATA_11 = REGISTER_DESCRIPTION<0x54, IO_FLAG::R>;
+using EXT_SENS_DATA_12 = REGISTER_DESCRIPTION<0x55, IO_FLAG::R>;
+using EXT_SENS_DATA_13 = REGISTER_DESCRIPTION<0x56, IO_FLAG::R>;
+using EXT_SENS_DATA_14 = REGISTER_DESCRIPTION<0x57, IO_FLAG::R>;
+using EXT_SENS_DATA_15 = REGISTER_DESCRIPTION<0x58, IO_FLAG::R>;
+using EXT_SENS_DATA_16 = REGISTER_DESCRIPTION<0x59, IO_FLAG::R>;
+using EXT_SENS_DATA_17 = REGISTER_DESCRIPTION<0x5A, IO_FLAG::R>;
+using EXT_SENS_DATA_18 = REGISTER_DESCRIPTION<0x5B, IO_FLAG::R>;
+using EXT_SENS_DATA_19 = REGISTER_DESCRIPTION<0x5C, IO_FLAG::R>;
+using EXT_SENS_DATA_20 = REGISTER_DESCRIPTION<0x5D, IO_FLAG::R>;
+using EXT_SENS_DATA_21 = REGISTER_DESCRIPTION<0x5E, IO_FLAG::R>;
+using EXT_SENS_DATA_22 = REGISTER_DESCRIPTION<0x5F, IO_FLAG::R>;
+using EXT_SENS_DATA_23 = REGISTER_DESCRIPTION<0x60, IO_FLAG::R>;
+using I2C_SLV0_DO = REGISTER_DESCRIPTION<0x63, IO_FLAG::RW>;
+using I2C_SLV1_DO = REGISTER_DESCRIPTION<0x64, IO_FLAG::RW>;
+using I2C_SLV2_DO = REGISTER_DESCRIPTION<0x65, IO_FLAG::RW>;
+using I2C_SLV3_DO = REGISTER_DESCRIPTION<0x66, IO_FLAG::RW>;
+using I2C_MST_DELAY_CTRL = REGISTER_DESCRIPTION<0x67, IO_FLAG::RW, I2C_MST_DELAY_CTRL_DATA>;
+using SIGNAL_PATH_RESET = REGISTER_DESCRIPTION<0x68, IO_FLAG::RW, SIGNAL_PATH_RESET_DATA>;
+using ACCEL_INTEL_CTRL = REGISTER_DESCRIPTION<0x69, IO_FLAG::RW, ACCEL_INTEL_CTRL_DATA>;
+using USER_CTRL = REGISTER_DESCRIPTION<0x6A, IO_FLAG::RW, USER_CTRL_DATA>;
+using PWR_MGMT1 = REGISTER_DESCRIPTION<0x6B, IO_FLAG::RW, PWR_MGMT1_DATA>;
+using PWR_MGMT2 = REGISTER_DESCRIPTION<0x6C, IO_FLAG::RW, PWR_MGMT2_DATA>;
+using FIFO_COUNTH = REGISTER_DESCRIPTION<0x72, IO_FLAG::RW, FIFO_COUNTH_DATA>;
+using FIFO_COUNTL = REGISTER_DESCRIPTION<0x73, IO_FLAG::RW>;
+using FIFO_R_W = REGISTER_DESCRIPTION<0x74, IO_FLAG::RW>;
+using WHOAMI = REGISTER_DESCRIPTION<0x75, IO_FLAG::R>;
+using XA_OFFS_H = REGISTER_DESCRIPTION<0x77, IO_FLAG::RW>;
+using XA_OFFS_L = REGISTER_DESCRIPTION<0x78, IO_FLAG::RW, A_OFFS_L_DATA>;
+using YA_OFFS_H = REGISTER_DESCRIPTION<0x7A, IO_FLAG::RW>;
+using YA_OFFS_L = REGISTER_DESCRIPTION<0x7B, IO_FLAG::RW, A_OFFS_L_DATA>;
+using ZA_OFFS_H = REGISTER_DESCRIPTION<0x7D, IO_FLAG::RW>;
+using ZA_OFFS_L = REGISTER_DESCRIPTION<0x7E, IO_FLAG::RW, A_OFFS_L_DATA>;
+
+using MAG_WIA = REGISTER_DESCRIPTION<0x00, IO_FLAG::R>;
+using MAG_INFO = REGISTER_DESCRIPTION<0x01, IO_FLAG::R>;
+using MAG_ST1 = REGISTER_DESCRIPTION<0x02, IO_FLAG::R, MAG_ST1_DATA>;
+using MAG_XOUT_L = REGISTER_DESCRIPTION<0x03, IO_FLAG::R>;
+using MAG_XOUT_H = REGISTER_DESCRIPTION<0x04, IO_FLAG::R>;
+using MAG_YOUT_L = REGISTER_DESCRIPTION<0x05, IO_FLAG::R>;
+using MAG_YOUT_H = REGISTER_DESCRIPTION<0x06, IO_FLAG::R>;
+using MAG_ZOUT_L = REGISTER_DESCRIPTION<0x07, IO_FLAG::R>;
+using MAG_ZOUT_H = REGISTER_DESCRIPTION<0x08, IO_FLAG::R>;
+using MAG_ST2 = REGISTER_DESCRIPTION<0x09, IO_FLAG::R, MAG_ST2_DATA>;
+using MAG_CNTL1 = REGISTER_DESCRIPTION<0x0A, IO_FLAG::RW, MAG_CNTL1_DATA>;
+using MAG_CNTL2 = REGISTER_DESCRIPTION<0x0B, IO_FLAG::RW, MAG_CNTL2_DATA>;
+using MAG_ASTC = REGISTER_DESCRIPTION<0x0C, IO_FLAG::RW, MAG_ASTC_DATA>;
+using MAG_TS1 = REGISTER_DESCRIPTION<0x0D, IO_FLAG::RW>;
+using MAG_TS2 = REGISTER_DESCRIPTION<0x0E, IO_FLAG::RW>;
+using MAG_I2CDIS = REGISTER_DESCRIPTION<0x0F, IO_FLAG::RW>;
+using MAG_ASAX = REGISTER_DESCRIPTION<0x10, IO_FLAG::R>;
+using MAG_ASAY = REGISTER_DESCRIPTION<0x11, IO_FLAG::R>;
+using MAG_ASAZ = REGISTER_DESCRIPTION<0x12, IO_FLAG::R>;
+
+
+template<typename T>
+typename T::DATA& test(T& t) {
+    return t.getData();
+}
+
+
 class MPU9250 {
     public:
         MPU9250();
+        MPU9250(const char* i2cAddress);
+        MPU9250(uint8_t mpuAddress);
+        MPU9250(uint8_t mpuAddress, uint8_t magAddress);
+        MPU9250(const char* i2cAddress, uint8_t mpuAddress, uint8_t magAddress);
+
         void initialize();
 
         uint8_t getAuxVDDIOLevel(void);
@@ -381,7 +507,7 @@ class MPU9250 {
         bool setWaitForExternalSensorEnabled(const bool enabled);
         bool getSlave3FIFOEnabled(void);
         bool setSlave3FIFOEnabled(const bool enabled);
-         
+
         bool getSlaveReadWriteTransitionEnabled(void);
         bool setSlaveReadWriteTransitionEnabled(const bool enabled);
         uint8_t getMasterClockSpeed(void);
@@ -586,7 +712,7 @@ class MPU9250 {
         bool disableAccelerometer(void);
 
         void getAccelerometerTestData(uint8_t ax, uint8_t ay, uint8_t az);
-                
+
         bool accelerometerXIsEnabled(void);
         bool accelerometerYIsEnabled(void);
         bool accelerometerZIsEnabled(void);
@@ -641,7 +767,7 @@ class MPU9250 {
 
         void getMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);
         void getMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz);
-        
+
         //temperature functions
         bool getTempFIFOEnabled(void);
         bool setTempFIFOEnabled(const bool enabled);
@@ -663,8 +789,9 @@ class MPU9250 {
         uint16_t readRegisters(const uint8_t msb_register, const uint8_t lsb_register);
         uint8_t readMaskedRegister(const uint8_t register_addr, const uint8_t mask);
 
-        uint8_t _address;
-        uint8_t _mag_address;
+        I2Cdev _i2c;
+        uint8_t _mpuAddress;
+        uint8_t _magAddress;
         uint8_t _whoami;
         int16_t _temperature;
 };
